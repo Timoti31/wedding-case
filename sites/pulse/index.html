@@ -26,7 +26,11 @@
   .post{background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:18px;overflow:hidden}
   .post img{width:100%;display:block}
   .post .t{padding:12px 14px;font-size:15px;line-height:1.45}
-  .post .d{padding:0 14px 12px;font-size:12px;color:#888}
+  .post .d{padding:4px 14px 12px;font-size:12px;color:#888}
+  .lk{padding:10px 14px 0;font-size:14px;font-weight:600}
+  .cm{padding:2px 14px;font-size:14px}
+  .cm a{color:#111;text-decoration:none}
+  .post .t{padding:6px 14px 4px}
   .post .txt{padding:18px 16px;font-size:17px;line-height:1.45;background:linear-gradient(135deg,#fff1f4,#f1eeff)}
   .sv{position:fixed;inset:0;background:#000;display:none;align-items:center;justify-content:center;z-index:20}
   .sv img{max-height:92vh;max-width:100%}
@@ -40,30 +44,9 @@
 <div class="top"><b onclick="location.hash=''">Pulse</b><input id="q" placeholder="Поиск людей"></div>
 <div class="wrap" id="main"></div>
 <div class="sv" id="sv" onclick="this.style.display='none'"><div id="svb"></div></div>
+<script src="data.js"></script>
 <script>
-const P={
- dima:{name:"Дима Соколов",bio:"аудитор @ Northbridge Audit\nТбилиси",ava:"img/dima_ava.jpg",f:"412",posts:[
-   {txt:"Иногда цифры говорят больше, чем люди.",d:"10 ноября 2026"},
-   {img:"img/dima_couple.jpg",t:"Сказала да 💍 Та самая крыша, три года спустя",d:"14 марта 2026"},
-   {txt:"Мама, с 55-летием! ❤️ Самая терпеливая учительница математики в мире и самая лучшая мама.",d:"3 марта 2025"},
-   {img:"img/dima_husky.jpg",t:"Нашли у мамы старое фото. Лучший друг детства",d:"9 января 2023"}]},
- alina:{name:"Алина Миронова",bio:"interior design · Tbilisi\nскоро миссис Соколова",ava:"img/alina_ava.jpg",f:"2 318",stories:[{black:"если кто-то что-то знает о Диме, пожалуйста, напишите мне",d:"13.11, 09:30"}],posts:[
-   {img:"img/dima_couple.jpg",t:"Мой человек ❤️",d:"14 марта 2026"}]},
- kostya:{name:"Костя Орлов",bio:"звукорежиссер · студия «Подвал»\nдень рождения 21 марта, подарки принимаются 🎁",ava:"img/kostya_ava.jpg",f:"803",posts:[
-   {img:"img/kostya_fitting.jpg",t:"Жених готов. Вечером провожаем свободу 🕺",d:"12 ноября 2026"},
-   {txt:"Спасибо всем, кто пришел на крышу в Ваке! Особенно тем, кто пролил вино на незнакомых девушек. Говорят, иногда это заканчивается свадьбой.",d:"22 марта 2023"}]},
- lera:{name:"Лера Гусева",bio:"фотограф · portraits & travel\nBatumi / Tbilisi",ava:"img/lera_ava.jpg",f:"5 120",stories:[{img:"img/lera_story.jpg",cap:"12.11, 21:04 · Батуми"}],posts:[
-   {img:"img/lera_receipt.jpg",t:"Лучшие хинкали на побережье. Батуми, ты как всегда",d:"13 ноября 2026"},
-   {txt:"Устала читать про себя в чужих чатах. Я в Батуми с 11-го, работаю. Всем хорошего вечера.",d:"14 ноября 2026"}]},
- nino:{name:"Нино Квициани",bio:"wedding planner · Supra Events ✨\nсвадьбы в Грузии под ключ",ava:"img/nino_ava.jpg",f:"9 870",stories:[{img:"img/nino_story.jpg",cap:"12.11, 19:40",txt:"работаем до ночи 💼"}],posts:[
-   {txt:"Сезон 2026 был волшебным 💍✨ Спасибо всем нашим парам!",d:"30 октября 2026"}]},
- gela:{name:"Гела Беридзе",bio:"водитель · трансферы · VIP\n+995 555 01 47 22\nToyota Land Cruiser GG-147-GG",ava:"img/gela_ava.jpg",f:"96",posts:[
-   {img:"img/gela_car.jpg",t:"Военно-Грузинская, как всегда без пробок",d:"2 октября 2026"}]},
- tamara:{name:"Тамара Г.",bio:"жизнь прекрасна, дети мои 🌹",ava:"img/tamara_ava.jpg",f:"211",posts:[
-   {txt:"Скоро свадьба моей Алиночки!!! Я плачу уже сейчас 😭😭 Тост готов, три страницы!",d:"9 ноября 2026"}]},
- gosha:{name:"g0sha",bio:"backend · coffee · bugs\nне пишите мне про взлом соседского wi-fi",ava:"img/gosha_ava.jpg",f:"148",posts:[
-   {txt:"Если ваш пароль это кличка собаки и год рождения, у меня для вас плохие новости.",d:"5 октября 2026"}]}
-};
+const P=window.P;
 const main=document.getElementById("main");
 function list(q){
   const items=Object.entries(P).filter(([k,p])=>!q||p.name.toLowerCase().includes(q)||k.includes(q));
@@ -72,10 +55,12 @@ function list(q){
 function profile(k){
   const p=P[k];if(!p)return list("");
   main.innerHTML=`<span class="back" onclick="location.hash=''">← Поиск</span>
-  <div class="head"><img class="ava ${p.stories?"":"nost"}" src="${p.ava}" ${p.stories?`onclick="story('${k}',0)" style="cursor:pointer"`:""}><div><h1>${p.name}</h1><div class="stats"><span><b>${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span></div><div class="bio">${p.bio}</div></div></div>
+  <div class="head"><img class="ava ${p.stories?"":"nost"}" src="${p.ava}" ${p.stories?`onclick="story('${k}',0)" style="cursor:pointer"`:""}><div><h1>${p.name}</h1><div class="stats"><span><b class="pc">${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span><span><b>${p.fl||0}</b> подписок</span></div><div class="bio">${p.bio}</div></div></div>
   ${p.stories?`<div class="stories">${p.stories.map((s,i)=>`<div class="st" onclick="story('${k}',${i})"><img src="${s.img||p.ava}"><div>${s.cap?s.cap.split(" ·")[0]:s.d}</div></div>`).join("")}</div>`:""}
-  ${p.posts.map(x=>`<div class="post">${x.img?`<img src="${x.img}">`:`<div class="txt">${x.txt}</div>`}${x.t?`<div class="t"><b>${p.name}</b> ${x.t}</div>`:""}<div class="d">${x.d}</div></div>`).join("")}`;
+  ${p.posts.map(x=>`<div class="post">${x.img?`<img src="${x.img}" onerror="this.closest('.post').remove();upd()">`:`<div class="txt">${x.txt}</div>`}<div class="lk">♡ ${x.l||0} отметок «нравится»</div>${x.t?`<div class="t"><b>${p.name}</b> ${x.t}</div>`:""}${(x.c||[]).map(([u,t])=>`<div class="cm"><a ${P[u]?`href="#${u}"`:""}><b>${NAMES[u]||u}</b></a> ${t}</div>`).join("")}<div class="d">${x.d}</div></div>`).join("")}`;
+  upd();
 }
+function upd(){const c=document.querySelector(".pc");if(c)c.textContent=document.querySelectorAll(".post").length}
 function story(k,i){
   const s=P[k].stories[i];const b=document.getElementById("svb");
   b.innerHTML=s.black?`<div class="black">${s.black}</div><div class="cap">${P[k].name} · ${s.d}</div>`:`<img src="${s.img}"><div class="cap">${P[k].name} · ${s.cap}</div>${s.txt?`<div class="txt">${s.txt}</div>`:""}`;
