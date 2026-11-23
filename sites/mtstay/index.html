@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MtStay · Гостевые дома в горах Грузии</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#f5f7f6;color:#1d2b25}
+  header{background:#1f5f4a;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px}
+  header b{font-size:21px}
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+  .search{background:#fff;border-radius:12px;padding:14px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;border:1px solid #dfe7e3}
+  .search div{flex:1;min-width:150px;font-size:13px;color:#5e6f68}
+  .search b{display:block;color:#1d2b25;font-size:15px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .card{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dfe7e3;cursor:pointer}
+  .card .ph{height:190px;background:#cfd9d4 center/cover}
+  .card .b{padding:12px 14px}
+  .card h3{font-size:17px}
+  .card small{color:#5e6f68}
+  .rate{float:right;background:#1f5f4a;color:#fff;border-radius:6px;padding:2px 7px;font-size:13px}
+  .price{margin-top:6px;font-weight:600}
+  .detail{display:none}
+  .back{color:#1f5f4a;cursor:pointer;font-size:14px;margin-bottom:10px;display:inline-block}
+  .gal{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:14px}
+  .gal .ph{background:#cfd9d4 center/cover;border-radius:10px;cursor:pointer}
+  .gal .big{grid-row:span 2;height:360px}
+  .gal .small{height:176px}
+  @media(max-width:640px){.gal{grid-template-columns:1fr}.gal .big{height:240px}.gal .small{height:160px}}
+  .info{background:#fff;border-radius:12px;padding:18px;border:1px solid #dfe7e3;margin-bottom:14px}
+  .info h2{font-size:22px;margin-bottom:6px}
+  .rev{border-top:1px solid #eef2f0;padding:12px 0;font-size:14px}
+  .rev b{font-size:13px}
+  .rev small{color:#8a9893}
+  .lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9}
+  .lb img{max-width:95vw;max-height:90vh}
+</style>
+</head>
+<body>
+<header><b>MtStay</b><span style="opacity:.8;font-size:14px">гостевые дома в горах</span></header>
+<div class="wrap">
+  <div id="list">
+    <div class="search"><div>Направление<b>Степанцминда (Казбеги)</b></div><div>Даты<b>ноябрь 2026</b></div><div>Найдено<b>6 вариантов</b></div></div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="detail" id="detail"></div>
+</div>
+<div class="lb" id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
+<script>
+const H=[
+ {id:"kazbegi-view",name:"Kazbegi View Hotel",area:"центр, у автостанции",rate:"8.4",price:"90 ₾",photos:["img/kv_1.jpg"],desc:"Небольшой отель в центре поселка, 2 минуты до маршруток.",contact:"+995 599 11 20 31",revs:[["Олег","10.11.2026","Удобно, рядом остановка. Вид на гору Казбек из номера 3 этажа."]]},
+ {id:"mta",name:"Mta Guesthouse",area:"верхние улицы, ул. Чопикашвили",rate:"9.6",price:"70 ₾",photos:["img/mta_view.jpg","img/mta_house.jpg","img/mta_table.jpg","img/mta_cow.jpg"],desc:"Семейный гостевой дом. Вид на Гергети прямо из окна, домашний завтрак, хачапури от хозяйки. Хозяин Зураб.",contact:"Telegram: @mta_zurab",revs:[["Ольга В.","15.11.2026","Ноябрь, почти пусто, кроме нас был только один постоялец, который почти не выходил из комнаты. Хозяин все время носил ему еду наверх. Мы ему завидовали: хачапури каждое утро!"],["pasha_trip","25.09.2026","Вид из окна как на открытке, корова Мзия лучшая. Зураб рассказал про лавину 1987 года три раза."],["Maria","02.08.2026","Самые гостеприимные хозяева в Казбеги."]]},
+ {id:"stepantsminda-inn",name:"Stepantsminda Inn",area:"у реки Терек",rate:"8.1",price:"80 ₾",photos:["img/si_1.jpg"],desc:"Тихое место у реки, вид на ущелье.",contact:"+995 577 40 88 12",revs:[["Andrey","01.11.2026","Тихо, слышно реку. Церковь из окна не видно, но зато горы."]]},
+ {id:"gergeti-house",name:"Gergeti House",area:"село Гергети",rate:"8.9",price:"110 ₾",photos:["img/gh_1.jpg"],desc:"Дом в селе Гергети прямо под церковью. Церковь над головой, но из окна ее не видно, зато вид на поселок.",contact:"+995 591 05 77 60",revs:[["Lena","20.10.2026","До церкви 40 минут пешком, удобно для раннего подъема."]]},
+ {id:"terek-lodge",name:"Terek Lodge",area:"северная окраина",rate:"7.8",price:"60 ₾",photos:["img/tl_1.jpg"],desc:"Бюджетный вариант для треккеров.",contact:"+995 555 62 19 04",revs:[["Tom","28.09.2026","Simple and cheap. Mountain view, no church."]]},
+ {id:"khevi",name:"Khevi Family Rooms",area:"южная часть поселка",rate:"8.6",price:"75 ₾",photos:["img/kh_1.jpg"],desc:"Семейные номера, большой сад, вид на Гергети издалека.",contact:"+995 598 33 71 15",revs:[["Ирина","05.11.2026","Церковь видно, но маленькой точкой вдалеке и сбоку."]]}
+];
+const grid=document.getElementById("grid");
+grid.innerHTML=H.map(h=>`<div class="card" onclick="location.hash='${h.id}'"><div class="ph" style="background-image:url(${h.photos[0]})"></div><div class="b"><span class="rate">${h.rate}</span><h3>${h.name}</h3><small>${h.area}</small><div class="price">от ${h.price} / ночь</div></div></div>`).join("");
+function detail(id){const h=H.find(x=>x.id===id);if(!h)return list();
+ document.getElementById("list").style.display="none";const d=document.getElementById("detail");d.style.display="block";
+ d.innerHTML=`<span class="back" onclick="location.hash=''">← Все варианты</span>
+ <div class="gal">${h.photos.slice(0,3).map((p,i)=>`<div class="ph ${i?"small":"big"}" style="background-image:url(${p})" onclick="lb('${p}')"></div>`).join("")}</div>
+ ${h.photos.length>3?`<div style="display:flex;gap:8px;margin-bottom:14px">${h.photos.slice(3).map(p=>`<div class="ph" style="width:120px;height:90px;border-radius:8px;background:#cfd9d4 url(${p}) center/cover;cursor:pointer" onclick="lb('${p}')"></div>`).join("")}</div>`:""}
+ <div class="info"><span class="rate">${h.rate}</span><h2>${h.name}</h2><small style="color:#5e6f68">${h.area}</small><p style="margin-top:10px">${h.desc}</p><p style="margin-top:10px"><b>от ${h.price} / ночь</b> · Связаться: ${h.contact}</p></div>
+ <div class="info"><h2 style="font-size:18px">Отзывы</h2>${h.revs.map(r=>`<div class="rev"><b>${r[0]}</b> <small>${r[1]}</small><p>${r[2]}</p></div>`).join("")}</div>`}
+function list(){document.getElementById("detail").style.display="none";document.getElementById("list").style.display="block"}
+function lb(p){document.getElementById("lbi").src=p;document.getElementById("lb").style.display="flex"}
+function route(){const h=location.hash.slice(1);h?detail(h):list()}
+window.addEventListener("hashchange",route);route();
+</script>
+</body>
+</html>

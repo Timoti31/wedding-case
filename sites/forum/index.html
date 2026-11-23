@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тбилиси для своих · форум</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Verdana,Tahoma,sans-serif;font-size:14px;background:#e9e6df;color:#222}
+  header{background:#5b3a29;color:#fff;padding:12px 16px}
+  header b{font-size:19px}
+  header small{opacity:.8;margin-left:8px}
+  .wrap{max-width:900px;margin:0 auto;padding:14px}
+  .crumbs{margin-bottom:10px;font-size:13px}
+  .crumbs a{color:#5b3a29;cursor:pointer}
+  .box{background:#fff;border:1px solid #cfc8bb;margin-bottom:14px}
+  .box h3{background:#efe9df;padding:8px 12px;font-size:14px;border-bottom:1px solid #cfc8bb}
+  .t{display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer}
+  .t:hover{background:#faf7f1}
+  .t a{color:#2b4d8c;font-weight:bold}
+  .t small{color:#888}
+  .post{display:grid;grid-template-columns:150px 1fr;border-bottom:1px solid #e5dfd4}
+  @media(max-width:620px){.post{grid-template-columns:1fr}}
+  .post .u{background:#f6f2ea;padding:12px;font-size:12px;color:#555}
+  .post .u b{display:block;font-size:13px;color:#5b3a29;margin-bottom:4px}
+  .post .c{padding:12px;line-height:1.55}
+  .post .d{font-size:11px;color:#999;margin-bottom:6px}
+  footer{text-align:center;font-size:11px;color:#888;padding:20px}
+</style>
+</head>
+<body>
+<header><b>Тбилиси для своих</b><small>форум русскоязычных в Грузии</small></header>
+<div class="wrap" id="w"></div>
+<footer>© 2019–2026 tbilisi-svoi. Администрация не несет ответственности за содержание сообщений.</footer>
+<script>
+const SECT=[
+ {id:"work",name:"Работа и бизнес",threads:[
+  {id:"ally",title:"Как уволиться и не стать соучастником?",posts:[
+   {u:"lebeda35",info:"Новичок<br>Регистрация: 03.2024<br>Сообщений: 3",d:"13.11.2026, 23:48",t:"Работаю в свадебной сфере, в бухгалтерии. Давно вижу странное с деньгами: крупные суммы наличными, а свадеб, за которые они якобы заплачены, я не помню. Вчера меня попросили срочно удалить часть документов. Я удалила, но... Если я уволюсь, меня могут сделать крайней? Я одна с ребенком, мне страшно. Пишу анонимно, не ищите меня."},
+   {u:"Георгий_П",info:"Старожил<br>Сообщений: 2 104",d:"14.11.2026, 08:15",t:"Сохраните копии всего, что можете. И не обсуждайте это с коллегами. Если что-то случится, ваши копии будут вашей защитой."},
+   {u:"marina_tb",info:"Участник<br>Сообщений: 380",d:"14.11.2026, 10:02",t:"Поддерживаю. И найдите юриста, который не связан с вашей фирмой. Держитесь."},
+   {u:"lebeda35",info:"Новичок<br>Регистрация: 03.2024<br>Сообщений: 3",d:"14.11.2026, 12:30",t:"Спасибо. Копии у меня есть. Больше писать здесь не буду."}]},
+  {id:"vnzh",title:"ИП в Грузии в 2026: что изменилось",posts:[{u:"Георгий_П",info:"Старожил<br>Сообщений: 2 104",d:"02.11.2026",t:"Коротко: ставка 1% осталась, но отчетность теперь только онлайн. Подробности в шапке."}]}]},
+ {id:"wed",name:"Свадьбы и праздники",threads:[
+  {id:"supra",title:"Отзывы о Supra Events",posts:[
+   {u:"sofia_d",info:"Участник<br>Сообщений: 6",d:"12.06.2026",t:"Делали с ними свадьбу в саду в Мцхете, все отлично, Нино супер!"},
+   {u:"kate_wed",info:"Участник<br>Сообщений: 41",d:"02.09.2025",t:"Хорошие, но дорогие. Тамада Резо прекрасный."},
+   {u:"olga_m",info:"Участник<br>Сообщений: 17",d:"20.07.2026",t:"Свадьба в Кахетии в июле, все прошло идеально, спасибо!"},
+   {u:"levan_t",info:"Участник<br>Сообщений: 9",d:"30.04.2026",t:"Все было красиво, но странно: нас просили не выкладывать фото с отметкой агентства и предлагали скидку за оплату наличными. Кто-то сталкивался?"},
+   {u:"Георгий_П",info:"Старожил<br>Сообщений: 2 104",d:"30.04.2026",t:"Наличные со скидкой у нас тут классика, не удивляйтесь."}]},
+  {id:"arch",title:"Где взять арку для церемонии в аренду?",posts:[{u:"kate_wed",info:"Участник<br>Сообщений: 41",d:"03.05.2026",t:"Посоветуйте, кто сдает в аренду цветочные арки в Тбилиси?"}]}]},
+ {id:"trip",name:"Путешествия по Грузии",threads:[
+  {id:"kazbegi",title:"Где жить в Казбеги с видом на Гергети?",posts:[
+   {u:"pasha_trip",info:"Участник<br>Сообщений: 55",d:"18.09.2026",t:"Едем на 3 дня в Степанцминду. Хочется гостевой дом, чтобы из окна была видна церковь. Что посоветуете?"},
+   {u:"marina_tb",info:"Участник<br>Сообщений: 380",d:"18.09.2026",t:"Почти отовсюду в поселке видно, но лучший вид с верхних улиц. Смотрите на MtStay, там фото из окон."},
+   {u:"Георгий_П",info:"Старожил<br>Сообщений: 2 104",d:"19.09.2026",t:"Были у Зураба в Mta Guesthouse: вид на Гергети прямо из окна, жена делает лучшие хачапури, а хозяин рассказывает истории про лавину 1987 года. Корова Мзия прилагается."},
+   {u:"pasha_trip",info:"Участник<br>Сообщений: 55",d:"25.09.2026",t:"Съездили к Зурабу, подтверждаю все, включая корову."}]},
+  {id:"bus",title:"Маршрутки с Дидубе: расписание",posts:[{u:"Георгий_П",info:"Старожил<br>Сообщений: 2 104",d:"01.10.2026",t:"На Степанцминду (Казбеги) маршрутки уходят с автостанции Дидубе с утра, примерно раз в час, пока набираются. Водители зазывают криком «Казбеги, Казбеги!», не ошибетесь."}]}]}
+];
+const w=document.getElementById("w");
+function home(){w.innerHTML=`<div class="crumbs">Главная</div>`+SECT.map(s=>`<div class="box"><h3>${s.name}</h3>${s.threads.map(t=>`<div class="t" onclick="location.hash='${s.id}/${t.id}'"><a>${t.title}</a><small>${t.posts.length} сообщ. · ${t.posts[t.posts.length-1].d.split(",")[0]}</small></div>`).join("")}</div>`).join("")}
+function thread(sid,tid){const s=SECT.find(x=>x.id===sid);const t=s&&s.threads.find(x=>x.id===tid);if(!t)return home();
+ w.innerHTML=`<div class="crumbs"><a onclick="location.hash=''">Главная</a> › ${s.name}</div><div class="box"><h3>${t.title}</h3>${t.posts.map(p=>`<div class="post"><div class="u"><b>${p.u}</b>${p.info}</div><div class="c"><div class="d">${p.d}</div>${p.t}</div></div>`).join("")}</div>`}
+function route(){const h=location.hash.slice(1);if(h){const [a,b]=h.split("/");thread(a,b)}else home()}
+window.addEventListener("hashchange",route);route();
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Миронов Групп · Рестораны Тбилиси</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Montserrat,sans-serif;font-weight:300;background:#14110f;color:#e9e1d7;line-height:1.6}
+  h1,h2,h3{font-family:Cormorant,serif;font-weight:400;color:#d8b77a}
+  header{display:flex;justify-content:space-between;align-items:center;padding:20px 5vw;border-bottom:1px solid #2c2620}
+  header b{font-family:Cormorant,serif;font-size:24px;letter-spacing:.2em;color:#d8b77a}
+  header nav{display:flex;gap:20px;font-size:12px;letter-spacing:.15em;text-transform:uppercase}
+  header nav a{color:#a99a89;text-decoration:none}
+  @media(max-width:700px){header nav{display:none}}
+  section{max-width:1050px;margin:0 auto;padding:70px 5vw}
+  h2{font-size:42px;margin-bottom:20px}
+  .rest{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+  .r{border:1px solid #2c2620;padding:26px}
+  .r h3{font-size:28px}
+  .r small{color:#a99a89}
+  .about{display:grid;grid-template-columns:1fr 1.2fr;gap:36px;align-items:center}
+  @media(max-width:760px){.about{grid-template-columns:1fr}}
+  .about img{width:100%;filter:grayscale(.2)}
+  blockquote{font-family:Cormorant,serif;font-size:26px;font-style:italic;color:#f1e6d4;border-left:2px solid #d8b77a;padding-left:18px;margin:18px 0}
+  .news article{border-bottom:1px solid #2c2620;padding:24px 0}
+  .news img{width:100%;margin:12px 0}
+  .news time{font-size:12px;color:#a99a89;letter-spacing:.1em}
+  .news figcaption{font-size:14px;color:#a99a89}
+  footer{border-top:1px solid #2c2620;padding:40px 5vw;font-size:14px;color:#a99a89}
+  footer b{color:#d8b77a}
+</style>
+</head>
+<body>
+<header><b>МИРОНОВ ГРУПП</b><nav><a href="#rest">Рестораны</a><a href="#about">О нас</a><a href="#news">Новости</a><a href="#contacts">Контакты</a></nav></header>
+
+<section id="rest">
+  <h1 style="font-size:clamp(40px,7vw,72px);line-height:1.05;margin-bottom:14px">Гостеприимство<br>как искусство</h1>
+  <p style="max-width:540px;color:#bfb2a3;margin-bottom:40px">Три ресторана в сердце Тбилиси. Грузинская кухня, вино из квеври и атмосфера, ради которой возвращаются.</p>
+  <div class="rest">
+    <div class="r"><h3>Маспиндза</h3><small>Старый город · грузинская классика</small><p style="margin-top:10px">Хинкали ручной лепки, мцвади на углях и живое многоголосие по пятницам.</p></div>
+    <div class="r"><h3>Тифлис Хаус</h3><small>Сололаки · банкеты до 200 гостей</small><p style="margin-top:10px">Исторический особняк для свадеб, юбилеев и корпоративов.</p></div>
+    <div class="r"><h3>Вера Терраса</h3><small>Вера · терраса с видом на город</small><p style="margin-top:10px">Авторская кухня, закаты и винная карта на 300 позиций.</p></div>
+  </div>
+</section>
+
+<section id="about" class="about">
+  <img src="img/viktor.jpg" alt="Виктор Миронов">
+  <div><h2>О нас</h2>
+  <blockquote>Гость в Грузии посланник Бога. Мы просто стараемся этому соответствовать.</blockquote>
+  <p>Виктор Миронов основал «Миронов Групп» в 2014 году. Сегодня в команде 86 человек, а наши рестораны входят в число самых любимых в Тбилиси.</p></div>
+</section>
+
+<section id="news" class="news">
+  <h2>Новости</h2>
+  <article><time>20 ДЕКАБРЯ 2025</time><h3 style="font-size:26px">Новогодний ужин команды</h3>
+  <img src="img/corp.jpg" alt="Корпоратив">
+  <figcaption>Виктор Сергеевич и наш бессменный водитель Гела в окружении команды. Спасибо всем за этот год!</figcaption></article>
+  <article><time>5 СЕНТЯБРЯ 2025</time><h3 style="font-size:26px">«Вера Терраса» открыла сезон ужинов на закате</h3><p>Каждый вечер с 19:00, бронирование столов обязательно.</p></article>
+</section>
+
+<footer id="contacts">
+  <b>Миронов Групп</b><br>Офис: Тбилиси, ул. Палиашвили, 14<br>Бронирование: +995 322 00 14 14<br>Трансфер для VIP-гостей: Гела, +995 555 01 47 22
+</footer>
+</body>
+</html>

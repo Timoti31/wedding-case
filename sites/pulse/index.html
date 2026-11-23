@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulse</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#fafafa;color:#111}
+  .top{position:sticky;top:0;background:#fff;border-bottom:1px solid #e6e6e6;padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:5}
+  .top b{font-size:24px;background:linear-gradient(90deg,#ff3d6e,#7b4dff);-webkit-background-clip:text;color:transparent;cursor:pointer}
+  .top input{margin-left:auto;padding:8px 12px;border-radius:10px;border:0;background:#efefef;width:200px}
+  .wrap{max-width:620px;margin:0 auto;padding:16px}
+  .res{background:#fff;border:1px solid #eee;border-radius:12px}
+  .res a{display:flex;align-items:center;gap:12px;padding:10px 14px;color:#111;text-decoration:none;border-bottom:1px solid #f2f2f2}
+  .res img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+  .head{display:flex;gap:22px;align-items:center;margin:8px 0 18px}
+  .ava{width:96px;height:96px;border-radius:50%;object-fit:cover;padding:3px;background:linear-gradient(45deg,#ff3d6e,#ffb347,#7b4dff)}
+  .ava.nost{background:#ddd}
+  .head h1{font-size:20px}
+  .head .bio{font-size:14px;color:#444;margin-top:6px;white-space:pre-line}
+  .stats{display:flex;gap:16px;font-size:14px;margin-top:8px}
+  .stories{display:flex;gap:12px;margin-bottom:18px;overflow-x:auto}
+  .st{text-align:center;font-size:12px;cursor:pointer}
+  .st img{width:64px;height:64px;border-radius:50%;object-fit:cover;padding:2px;background:linear-gradient(45deg,#ff3d6e,#7b4dff)}
+  .post{background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:18px;overflow:hidden}
+  .post img{width:100%;display:block}
+  .post .t{padding:12px 14px;font-size:15px;line-height:1.45}
+  .post .d{padding:0 14px 12px;font-size:12px;color:#888}
+  .post .txt{padding:18px 16px;font-size:17px;line-height:1.45;background:linear-gradient(135deg,#fff1f4,#f1eeff)}
+  .sv{position:fixed;inset:0;background:#000;display:none;align-items:center;justify-content:center;z-index:20}
+  .sv img{max-height:92vh;max-width:100%}
+  .sv .cap{position:absolute;top:18px;left:18px;color:#fff;font-size:14px;text-shadow:0 1px 4px #000}
+  .sv .txt{position:absolute;bottom:12%;left:0;right:0;text-align:center;color:#fff;font-size:22px;text-shadow:0 2px 6px #000}
+  .sv .black{width:360px;height:640px;max-width:92vw;max-height:88vh;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;font-size:20px}
+  .back{font-size:14px;color:#7b4dff;cursor:pointer;margin-bottom:10px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="top"><b onclick="location.hash=''">Pulse</b><input id="q" placeholder="Поиск людей"></div>
+<div class="wrap" id="main"></div>
+<div class="sv" id="sv" onclick="this.style.display='none'"><div id="svb"></div></div>
+<script>
+const P={
+ dima:{name:"Дима Соколов",bio:"аудитор @ Northbridge Audit\nТбилиси",ava:"img/dima_ava.jpg",f:"412",posts:[
+   {txt:"Иногда цифры говорят больше, чем люди.",d:"10 ноября 2026"},
+   {img:"img/dima_couple.jpg",t:"Сказала да 💍 Та самая крыша, три года спустя",d:"14 марта 2026"},
+   {txt:"Мама, с 55-летием! ❤️ Самая терпеливая учительница математики в мире и самая лучшая мама.",d:"3 марта 2025"},
+   {img:"img/dima_husky.jpg",t:"Нашли у мамы старое фото. Лучший друг детства",d:"9 января 2023"}]},
+ alina:{name:"Алина Миронова",bio:"interior design · Tbilisi\nскоро миссис Соколова",ava:"img/alina_ava.jpg",f:"2 318",stories:[{black:"если кто-то что-то знает о Диме, пожалуйста, напишите мне",d:"13.11, 09:30"}],posts:[
+   {img:"img/dima_couple.jpg",t:"Мой человек ❤️",d:"14 марта 2026"}]},
+ kostya:{name:"Костя Орлов",bio:"звукорежиссер · студия «Подвал»\nдень рождения 21 марта, подарки принимаются 🎁",ava:"img/kostya_ava.jpg",f:"803",posts:[
+   {img:"img/kostya_fitting.jpg",t:"Жених готов. Вечером провожаем свободу 🕺",d:"12 ноября 2026"},
+   {txt:"Спасибо всем, кто пришел на крышу в Ваке! Особенно тем, кто пролил вино на незнакомых девушек. Говорят, иногда это заканчивается свадьбой.",d:"22 марта 2023"}]},
+ lera:{name:"Лера Гусева",bio:"фотограф · portraits & travel\nBatumi / Tbilisi",ava:"img/lera_ava.jpg",f:"5 120",stories:[{img:"img/lera_story.jpg",cap:"12.11, 21:04 · Батуми"}],posts:[
+   {img:"img/lera_receipt.jpg",t:"Лучшие хинкали на побережье. Батуми, ты как всегда",d:"13 ноября 2026"},
+   {txt:"Устала читать про себя в чужих чатах. Я в Батуми с 11-го, работаю. Всем хорошего вечера.",d:"14 ноября 2026"}]},
+ nino:{name:"Нино Квициани",bio:"wedding planner · Supra Events ✨\nсвадьбы в Грузии под ключ",ava:"img/nino_ava.jpg",f:"9 870",stories:[{img:"img/nino_story.jpg",cap:"12.11, 19:40",txt:"работаем до ночи 💼"}],posts:[
+   {txt:"Сезон 2026 был волшебным 💍✨ Спасибо всем нашим парам!",d:"30 октября 2026"}]},
+ gela:{name:"Гела Беридзе",bio:"водитель · трансферы · VIP\n+995 555 01 47 22\nToyota Land Cruiser GG-147-GG",ava:"img/gela_ava.jpg",f:"96",posts:[
+   {img:"img/gela_car.jpg",t:"Военно-Грузинская, как всегда без пробок",d:"2 октября 2026"}]},
+ tamara:{name:"Тамара Г.",bio:"жизнь прекрасна, дети мои 🌹",ava:"img/tamara_ava.jpg",f:"211",posts:[
+   {txt:"Скоро свадьба моей Алиночки!!! Я плачу уже сейчас 😭😭 Тост готов, три страницы!",d:"9 ноября 2026"}]},
+ gosha:{name:"g0sha",bio:"backend · coffee · bugs\nне пишите мне про взлом соседского wi-fi",ava:"img/gosha_ava.jpg",f:"148",posts:[
+   {txt:"Если ваш пароль это кличка собаки и год рождения, у меня для вас плохие новости.",d:"5 октября 2026"}]}
+};
+const main=document.getElementById("main");
+function list(q){
+  const items=Object.entries(P).filter(([k,p])=>!q||p.name.toLowerCase().includes(q)||k.includes(q));
+  main.innerHTML=`<div class="res">${items.map(([k,p])=>`<a href="#${k}"><img src="${p.ava}"><div><b>${p.name}</b><br><small style="color:#888">${p.bio.split("\n")[0]}</small></div></a>`).join("")}</div>`;
+}
+function profile(k){
+  const p=P[k];if(!p)return list("");
+  main.innerHTML=`<span class="back" onclick="location.hash=''">← Поиск</span>
+  <div class="head"><img class="ava ${p.stories?"":"nost"}" src="${p.ava}" ${p.stories?`onclick="story('${k}',0)" style="cursor:pointer"`:""}><div><h1>${p.name}</h1><div class="stats"><span><b>${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span></div><div class="bio">${p.bio}</div></div></div>
+  ${p.stories?`<div class="stories">${p.stories.map((s,i)=>`<div class="st" onclick="story('${k}',${i})"><img src="${s.img||p.ava}"><div>${s.cap?s.cap.split(" ·")[0]:s.d}</div></div>`).join("")}</div>`:""}
+  ${p.posts.map(x=>`<div class="post">${x.img?`<img src="${x.img}">`:`<div class="txt">${x.txt}</div>`}${x.t?`<div class="t"><b>${p.name}</b> ${x.t}</div>`:""}<div class="d">${x.d}</div></div>`).join("")}`;
+}
+function story(k,i){
+  const s=P[k].stories[i];const b=document.getElementById("svb");
+  b.innerHTML=s.black?`<div class="black">${s.black}</div><div class="cap">${P[k].name} · ${s.d}</div>`:`<img src="${s.img}"><div class="cap">${P[k].name} · ${s.cap}</div>${s.txt?`<div class="txt">${s.txt}</div>`:""}`;
+  document.getElementById("sv").style.display="flex";
+}
+function route(){const k=location.hash.slice(1);k?profile(k):list(document.getElementById("q").value.toLowerCase())}
+window.addEventListener("hashchange",route);
+document.getElementById("q").oninput=e=>{location.hash="";list(e.target.value.toLowerCase())};
+route();
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CompanyInfo · Проверка компаний Грузии</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#eef1f5;color:#1b2430}
+  header{background:#123c69;color:#fff;padding:14px 20px}
+  header b{font-size:20px}
+  header small{opacity:.75;margin-left:8px}
+  .wrap{max-width:860px;margin:0 auto;padding:20px}
+  .search{display:flex;gap:8px;margin-bottom:18px}
+  .search input{flex:1;padding:12px 14px;border:1px solid #c9d2dd;border-radius:8px;font-size:16px}
+  .search button{background:#123c69;color:#fff;border:0;border-radius:8px;padding:0 20px;font-size:15px;cursor:pointer}
+  .hint{font-size:13px;color:#6b7785;margin-bottom:16px}
+  .card{background:#fff;border-radius:10px;border:1px solid #d9e0e8;padding:18px 20px;margin-bottom:14px}
+  .card h2{font-size:19px;margin-bottom:4px}
+  .card .st{display:inline-block;font-size:12px;background:#e3f4e8;color:#1f7a3d;padding:2px 8px;border-radius:10px;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td{padding:7px 4px;border-bottom:1px solid #eef1f5;vertical-align:top}
+  td:first-child{color:#6b7785;width:42%}
+  .empty{color:#6b7785;padding:20px;text-align:center}
+  .row{cursor:pointer}
+  .row:hover h2{color:#123c69;text-decoration:underline}
+  footer{text-align:center;font-size:12px;color:#8b96a3;padding:24px}
+</style>
+</head>
+<body>
+<header><b>CompanyInfo</b><small>открытые данные о компаниях Грузии</small></header>
+<div class="wrap">
+  <div class="search"><input id="q" placeholder="Название, ИНН, директор или учредитель"><button id="go">Найти</button></div>
+  <div class="hint">Данные собраны из открытых источников и обновляются еженедельно.</div>
+  <div id="out"></div>
+</div>
+<footer>CompanyInfo не является официальным реестром. Информация носит справочный характер.</footer>
+<script>
+const C=[
+ {name:"Supra Events LLC",inn:"405 518 772",st:"Действующая",reg:"14.04.2021",act:"Организация праздников и мероприятий",dir:"Квициани Нино",own:"Беридзе Гела (100%)",addr:"Тбилиси, ул. Палиашвили, 14",tel:"+995 555 01 47 22",cap:"1 000 GEL",staff:"3"},
+ {name:"Миронов Групп LLC",inn:"404 211 038",st:"Действующая",reg:"03.09.2014",act:"Рестораны и общественное питание",dir:"Миронов Виктор",own:"Миронов Виктор (100%)",addr:"Тбилиси, ул. Палиашвили, 14",tel:"+995 322 00 14 14",cap:"50 000 GEL",staff:"86"},
+ {name:"Марани Сигнахи LLC",inn:"231 877 410",st:"Действующая",reg:"22.06.2011",act:"Производство вина, туризм",dir:"Чиковани Леван",own:"Чиковани Леван (60%), Чиковани Эка (40%)",addr:"Сигнахи, ул. Костава, 9",tel:"+995 355 23 08 17",cap:"20 000 GEL",staff:"14"},
+ {name:"Northbridge Audit Georgia LLC",inn:"405 001 963",st:"Действующая",reg:"10.02.2019",act:"Аудит и консалтинг",dir:"Hartmann Paul",own:"Northbridge Audit Group B.V. (100%)",addr:"Тбилиси, пр. Руставели, 40",tel:"+995 322 47 47 00",cap:"100 000 GEL",staff:"41"},
+ {name:"Supra Wine Tours LLC",inn:"405 772 015",st:"Ликвидирована",reg:"05.05.2018",act:"Туристические услуги",dir:"Габуния Сандро",own:"Габуния Сандро (100%)",addr:"Тбилиси, ул. Леселидзе, 3",tel:"",cap:"500 GEL",staff:"0"}
+];
+const F=[["ИНН","inn"],["Статус","st"],["Дата регистрации","reg"],["Вид деятельности","act"],["Директор","dir"],["Учредитель (владелец)","own"],["Юридический адрес","addr"],["Телефон","tel"],["Уставный капитал","cap"],["Сотрудников","staff"]];
+function card(c,full){return `<div class="card ${full?"":"row"}" ${full?"":`onclick="show('${c.inn}')"`}><h2>${c.name}</h2><span class="st" style="${c.st!=="Действующая"?"background:#f6e3e3;color:#b0413e":""}">${c.st}</span>${full?`<table>${F.map(([l,k])=>`<tr><td>${l}</td><td>${c[k]||"—"}</td></tr>`).join("")}</table>`:`<div style="font-size:14px;color:#6b7785">ИНН ${c.inn} · ${c.addr}</div>`}</div>`}
+function search(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  if(!q){document.getElementById("out").innerHTML="";return}
+  const r=C.filter(c=>Object.values(c).join(" ").toLowerCase().replace(/\s/g,"").includes(q.replace(/\s/g,"")));
+  document.getElementById("out").innerHTML=r.length?r.map(c=>card(c,false)).join(""):'<div class="card empty">Ничего не найдено</div>';
+}
+function show(inn){document.getElementById("out").innerHTML=card(C.find(c=>c.inn===inn),true)}
+document.getElementById("go").onclick=search;
+document.getElementById("q").addEventListener("keydown",e=>{if(e.key==="Enter")search()});
+</script>
+</body>
+</html>
