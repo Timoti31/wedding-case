@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Марани Сигнахи · Винодельня и терраса</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--wine:#6e2233;--ink:#2a2422;--soft:#857a74;--bg:#faf6f0;--line:#e7ddd2}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Source Sans 3",system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;font-weight:300}
+  h1,h2,h3{font-family:Lora,Georgia,serif;font-weight:400}
+  header{background:var(--wine);color:#f6e9e4;display:flex;justify-content:space-between;align-items:center;padding:14px 5vw}
+  header .logo{font-family:Lora,serif;font-size:21px}
+  header nav{display:flex;gap:18px;font-size:14px}
+  header nav a{color:#f1d7cf;text-decoration:none}
+  @media(max-width:700px){header nav{display:none}}
+  .hero{height:70vh;min-height:400px;background:linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,0) 60%),url(img/hero.jpg) center/cover;display:flex;align-items:flex-end;padding:0 5vw 6vh;color:#fff}
+  .hero h1{font-size:clamp(34px,6vw,58px);line-height:1.1}
+  .hero p{font-size:18px;margin-top:8px;opacity:.9}
+  section{max-width:1000px;margin:0 auto;padding:70px 5vw}
+  h2{font-size:36px;color:var(--wine);margin-bottom:16px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
+  @media(max-width:700px){.two{grid-template-columns:1fr}}
+  .two img{width:100%;border-radius:4px}
+  .news article{background:#fff;border:1px solid var(--line);padding:22px 24px;margin-bottom:16px}
+  .news time{font-size:13px;color:var(--wine);font-weight:600;letter-spacing:.05em}
+  .news h3{font-size:22px;margin:4px 0 8px}
+  .cal{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .mon{background:#fff;border:1px solid var(--line);padding:16px 18px}
+  .mon h3{font-size:19px;color:var(--wine);margin-bottom:8px}
+  .mon li{list-style:none;font-size:14px;padding:3px 0;border-bottom:1px dotted var(--line)}
+  .mon.closed{background:#eee8e2;color:#9a908a}
+  .mon.closed h3{color:#9a908a}
+  .tours{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .tour{background:#fff;border:1px solid var(--line);padding:22px}
+  .tour b{color:var(--wine);font-size:20px;font-family:Lora}
+  footer{background:#2a2422;color:#b7aaa3;padding:40px 5vw;font-size:14px}
+</style>
+</head>
+<body>
+<header><div class="logo">Марани Сигнахи</div><nav><a href="#about">О нас</a><a href="#news">Новости</a><a href="#events">Мероприятия</a><a href="#tours">Дегустации</a><a href="#contacts">Контакты</a></nav></header>
+
+<div class="hero"><div><h1>Вино, которому восемь тысяч лет</h1><p>Семейная винодельня в Сигнахи с террасой над Алазанской долиной</p></div></div>
+
+<section id="about" class="two">
+  <div><h2>О винодельне</h2><p>Мы делаем вино в квеври так, как его делали наши прадеды: саперави, ркацители и киси из собственных виноградников. Каменная терраса с видом на долину и горы вмещает до 150 гостей. Здесь проходят дегустации, семейные праздники и свадьбы.</p></div>
+  <img src="img/terrace.jpg" alt="Терраса">
+</section>
+
+<section id="news" class="news">
+  <h2>Новости</h2>
+  <article><time>3 ноября 2026</time><h3>Молодое вино 2026 уже в погребе</h3><p>Ртвели позади, первое вино нового урожая можно попробовать на дегустации каждую субботу.</p></article>
+  <article><time>26 августа 2026</time><h3>Мы снова открыты!</h3><p>Реконструкция марани и террасы завершена. Новый банкетный зал, обновленный погреб и та же любимая терраса. Дегустации возобновлены с сегодняшнего дня.</p></article>
+  <article><time>20 июля 2026</time><h3>Закрываемся на реконструкцию</h3><p>С 1 по 25 августа марани и терраса закрыты на реконструкцию. Дегустации и мероприятия в эти дни не проводятся. Возобновим работу 26 августа. Спасибо за понимание!</p></article>
+  <article><time>2 мая 2026</time><h3>Открываем сезон на террасе</h3><p>Терраса снова принимает гостей. Бронируйте даты для праздников заранее: майские субботы почти разобраны.</p></article>
+</section>
+
+<section id="events">
+  <h2>Календарь мероприятий</h2>
+  <p style="margin-bottom:18px;color:var(--soft)">Частные мероприятия на террасе и в зале, 2026</p>
+  <div class="cal">
+    <div class="mon"><h3>Май</h3><ul><li>9 мая · частное мероприятие</li><li>23 мая · дегустация для группы</li></ul></div>
+    <div class="mon"><h3>Июнь</h3><ul><li>13 июня · юбилей</li><li>27 июня · дегустация для группы</li></ul></div>
+    <div class="mon"><h3>Июль</h3><ul><li>18 июля · корпоратив</li></ul></div>
+    <div class="mon closed"><h3>Август</h3><ul><li>1–25 августа · закрыто на реконструкцию</li></ul></div>
+    <div class="mon"><h3>Сентябрь</h3><ul><li>12 сентября · дегустация для группы</li><li>26 сентября · сбор урожая для гостей</li></ul></div>
+    <div class="mon"><h3>Октябрь</h3><ul><li>24 октября · ртвели, закрытое мероприятие для партнеров</li></ul></div>
+    <div class="mon"><h3>Ноябрь</h3><ul><li>14 ноября · свадьба, Supra Events</li></ul></div>
+  </div>
+</section>
+
+<section id="tours">
+  <h2>Дегустации</h2>
+  <div class="tours">
+    <div class="tour"><h3>Классическая</h3><b>40 ₾</b><p>5 вин из квеври, сыр и хлеб из тонэ</p></div>
+    <div class="tour"><h3>С экскурсией</h3><b>65 ₾</b><p>Погреб, виноградник и 7 вин</p></div>
+    <div class="tour"><h3>Супра на террасе</h3><b>120 ₾</b><p>Ужин с вином и видом на закат</p></div>
+  </div>
+</section>
+
+<section class="two">
+  <img src="img/night.jpg" alt="Терраса вечером">
+  <div><h2>Праздники на террасе</h2><p>Свадьбы и праздники мы проводим вместе с проверенными агентствами. Бронирование террасы возможно с мая по октябрь, кроме дней технического обслуживания.</p></div>
+</section>
+
+<footer id="contacts">
+  <b style="color:#fff">Марани Сигнахи</b><br>Сигнахи, Кахетия, Грузия<br>+995 355 23 08 17 · info@marani-signagi.ge<br>Дегустации: ежедневно 11:00–19:00
+</footer>
+</body>
+</html>
