@@ -9,66 +9,93 @@
   body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#fafafa;color:#111}
   .top{position:sticky;top:0;background:#fff;border-bottom:1px solid #e6e6e6;padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:5}
   .top b{font-size:24px;background:linear-gradient(90deg,#ff3d6e,#7b4dff);-webkit-background-clip:text;color:transparent;cursor:pointer}
-  .top input{margin-left:auto;padding:8px 12px;border-radius:10px;border:0;background:#efefef;width:200px}
+  .top input{margin-left:auto;padding:8px 12px;border-radius:10px;border:0;background:#efefef;width:220px;max-width:50vw}
   .wrap{max-width:620px;margin:0 auto;padding:16px}
-  .res{background:#fff;border:1px solid #eee;border-radius:12px}
+  .sec{font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 10px}
+  .res{background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:16px}
   .res a{display:flex;align-items:center;gap:12px;padding:10px 14px;color:#111;text-decoration:none;border-bottom:1px solid #f2f2f2}
-  .res img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+  .av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600}
   .head{display:flex;gap:22px;align-items:center;margin:8px 0 18px}
-  .ava{width:96px;height:96px;border-radius:50%;object-fit:cover;padding:3px;background:linear-gradient(45deg,#ff3d6e,#ffb347,#7b4dff)}
+  .ava{width:96px;height:96px;border-radius:50%;object-fit:cover;padding:3px;background:linear-gradient(45deg,#ff3d6e,#ffb347,#7b4dff);flex:none}
   .ava.nost{background:#ddd}
+  .ava.ini{display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;font-weight:600;padding:0}
   .head h1{font-size:20px}
+  .head .nk{color:#888;font-size:14px}
   .head .bio{font-size:14px;color:#444;margin-top:6px;white-space:pre-line}
-  .stats{display:flex;gap:16px;font-size:14px;margin-top:8px}
+  .stats{display:flex;gap:14px;font-size:14px;margin-top:8px;flex-wrap:wrap}
   .stories{display:flex;gap:12px;margin-bottom:18px;overflow-x:auto}
   .st{text-align:center;font-size:12px;cursor:pointer}
   .st img{width:64px;height:64px;border-radius:50%;object-fit:cover;padding:2px;background:linear-gradient(45deg,#ff3d6e,#7b4dff)}
   .post{background:#fff;border:1px solid #eee;border-radius:12px;margin-bottom:18px;overflow:hidden}
-  .post img{width:100%;display:block}
-  .post .t{padding:12px 14px;font-size:15px;line-height:1.45}
-  .post .d{padding:4px 14px 12px;font-size:12px;color:#888}
-  .lk{padding:10px 14px 0;font-size:14px;font-weight:600}
-  .cm{padding:2px 14px;font-size:14px}
-  .cm a{color:#111;text-decoration:none}
-  .post .t{padding:6px 14px 4px}
+  .post .ph{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer}
+  .post .ph .av{width:32px;height:32px;font-size:13px}
+  .post img.pi{width:100%;display:block}
+  .post .t{padding:10px 14px 4px;font-size:15px;line-height:1.45}
   .post .txt{padding:18px 16px;font-size:17px;line-height:1.45;background:linear-gradient(135deg,#fff1f4,#f1eeff)}
+  .post .lk{padding:6px 14px 0;font-size:14px;font-weight:600}
+  .post .cm{padding:4px 14px 0;font-size:14px;line-height:1.4}
+  .post .cm b{cursor:pointer}
+  .post .d{padding:6px 14px 12px;font-size:12px;color:#888}
   .sv{position:fixed;inset:0;background:#000;display:none;align-items:center;justify-content:center;z-index:20}
   .sv img{max-height:92vh;max-width:100%}
   .sv .cap{position:absolute;top:18px;left:18px;color:#fff;font-size:14px;text-shadow:0 1px 4px #000}
   .sv .txt{position:absolute;bottom:12%;left:0;right:0;text-align:center;color:#fff;font-size:22px;text-shadow:0 2px 6px #000}
   .sv .black{width:360px;height:640px;max-width:92vw;max-height:88vh;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;font-size:20px}
   .back{font-size:14px;color:#7b4dff;cursor:pointer;margin-bottom:10px;display:inline-block}
+  .empty{color:#888;text-align:center;padding:30px}
 </style>
 </head>
 <body>
-<div class="top"><b onclick="location.hash=''">Pulse</b><input id="q" placeholder="Поиск людей"></div>
+<div class="top"><b onclick="go('')">Pulse</b><input id="q" placeholder="Поиск"></div>
 <div class="wrap" id="main"></div>
 <div class="sv" id="sv" onclick="this.style.display='none'"><div id="svb"></div></div>
 <script src="data.js"></script>
 <script>
-const P=window.P;
+const D=window.PULSE;const ALL={};
+const conv=x=>({img:x[0],t:x[0]?x[1]:null,txt:x[0]?null:x[1],d:x[2],l:x[3],c:[]});
+Object.values(D.main).forEach(p=>ALL[p.nick]=Object.assign({},p,{main:true}));
+D.extra.forEach(p=>ALL[p.nick]=Object.assign({},p,{main:false,posts:p.posts.map(conv)}));
+const COLORS=["#e5677d","#7b6cf6","#2fae8c","#f0a33a","#3b8fe0","#c45bd1","#5aa65a"];
+function col(n){let h=0;for(const ch of n)h=(h*31+ch.charCodeAt(0))%997;return COLORS[h%COLORS.length]}
+function av(p){return p.ava?`<img class="av" src="${p.ava}">`:`<div class="av" style="background:${col(p.nick)}">${p.name[0]}</div>`}
+const toDate=s=>{const [d,m,y]=s.split(".");return new Date(+y,+m-1,+d)};
 const main=document.getElementById("main");
-function list(q){
-  const items=Object.entries(P).filter(([k,p])=>!q||p.name.toLowerCase().includes(q)||k.includes(q));
-  main.innerHTML=`<div class="res">${items.map(([k,p])=>`<a href="#${k}"><img src="${p.ava}"><div><b>${p.name}</b><br><small style="color:#888">${p.bio.split("\n")[0]}</small></div></a>`).join("")}</div>`;
+function go(h){location.hash=h}
+function postHTML(p,x,showHead){
+  return `<div class="post">${showHead?`<div class="ph" onclick="go('${p.nick}')">${av(p)}${p.nick}</div>`:""}
+  ${x.img?`<img class="pi" src="${x.img}" onerror="this.closest('.post').remove()">`:`<div class="txt">${x.txt}</div>`}
+  <div class="lk">♥ ${x.l||0}</div>
+  ${x.t?`<div class="t"><b>${p.nick}</b> ${x.t}</div>`:""}
+  ${(x.c||[]).map(c=>`<div class="cm"><b onclick="go('${c[0]}')">${c[0]}</b> ${c[1]}</div>`).join("")}
+  <div class="d">${x.d}</div></div>`;
 }
-function profile(k){
-  const p=P[k];if(!p)return list("");
-  main.innerHTML=`<span class="back" onclick="location.hash=''">← Поиск</span>
-  <div class="head"><img class="ava ${p.stories?"":"nost"}" src="${p.ava}" ${p.stories?`onclick="story('${k}',0)" style="cursor:pointer"`:""}><div><h1>${p.name}</h1><div class="stats"><span><b class="pc">${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span><span><b>${p.fl||0}</b> подписок</span></div><div class="bio">${p.bio}</div></div></div>
-  ${p.stories?`<div class="stories">${p.stories.map((s,i)=>`<div class="st" onclick="story('${k}',${i})"><img src="${s.img||p.ava}"><div>${s.cap?s.cap.split(" ·")[0]:s.d}</div></div>`).join("")}</div>`:""}
-  ${p.posts.map(x=>`<div class="post">${x.img?`<img src="${x.img}" onerror="this.closest('.post').remove();upd()">`:`<div class="txt">${x.txt}</div>`}<div class="lk">♡ ${x.l||0} отметок «нравится»</div>${x.t?`<div class="t"><b>${p.name}</b> ${x.t}</div>`:""}${(x.c||[]).map(([u,t])=>`<div class="cm"><a ${P[u]?`href="#${u}"`:""}><b>${NAMES[u]||u}</b></a> ${t}</div>`).join("")}<div class="d">${x.d}</div></div>`).join("")}`;
-  upd();
+function feed(){
+  const items=[];
+  Object.values(ALL).forEach(p=>p.posts.forEach(x=>{if(!p.main||x.l>150)items.push([p,x])}));
+  items.sort((a,b)=>toDate(b[1].d)-toDate(a[1].d));
+  main.innerHTML=`<div class="sec">Популярное</div>`+items.slice(0,30).map(([p,x])=>postHTML(p,x,true)).join("");
 }
-function upd(){const c=document.querySelector(".pc");if(c)c.textContent=document.querySelectorAll(".post").length}
-function story(k,i){
-  const s=P[k].stories[i];const b=document.getElementById("svb");
-  b.innerHTML=s.black?`<div class="black">${s.black}</div><div class="cap">${P[k].name} · ${s.d}</div>`:`<img src="${s.img}"><div class="cap">${P[k].name} · ${s.cap}</div>${s.txt?`<div class="txt">${s.txt}</div>`:""}`;
+function search(q){
+  const r=Object.values(ALL).filter(p=>(p.name+" "+p.nick+" "+(p.bio||"")).toLowerCase().includes(q));
+  main.innerHTML=`<div class="sec">Люди</div><div class="res">${r.length?r.map(p=>`<a href="#${p.nick}">${av(p)}<div><b>${p.nick}</b><br><small style="color:#888">${p.name}${p.bio?" · "+p.bio.split("\n")[0]:""}</small></div></a>`).join(""):'<div class="empty">Ничего не найдено</div>'}</div>`;
+}
+function profile(nick){
+  const p=ALL[nick];if(!p){main.innerHTML='<div class="empty">Аккаунт не найден</div>';return}
+  main.innerHTML=`<span class="back" onclick="history.back()">← Назад</span>
+  <div class="head">${p.ava?`<img class="ava ${p.stories?"":"nost"}" src="${p.ava}" ${p.stories?`onclick="story('${nick}',0)" style="cursor:pointer"`:""}>`:`<div class="ava ini" style="background:${col(p.nick)}">${p.name[0]}</div>`}
+  <div><h1>${p.name}</h1><div class="nk">@${p.nick}</div><div class="stats"><span><b>${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span>${p.fl?`<span><b>${p.fl}</b> подписок</span>`:""}</div>${p.bio?`<div class="bio">${p.bio}</div>`:""}</div></div>
+  ${p.stories?`<div class="stories">${p.stories.map((s,i)=>`<div class="st" onclick="story('${nick}',${i})"><img src="${s.img||p.ava}"><div>${s.cap?s.cap.split(" ·")[0]:s.d}</div></div>`).join("")}</div>`:""}
+  ${p.posts.length?p.posts.map(x=>postHTML(p,x,false)).join(""):'<div class="empty">Публикаций пока нет</div>'}`;
+  scrollTo(0,0);
+}
+function story(nick,i){
+  const p=ALL[nick],s=p.stories[i],b=document.getElementById("svb");
+  b.innerHTML=s.black?`<div class="black">${s.black}</div><div class="cap">${p.nick} · ${s.d}</div>`:`<img src="${s.img}"><div class="cap">${p.nick} · ${s.cap}</div>${s.txt?`<div class="txt">${s.txt}</div>`:""}`;
   document.getElementById("sv").style.display="flex";
 }
-function route(){const k=location.hash.slice(1);k?profile(k):list(document.getElementById("q").value.toLowerCase())}
+function route(){const h=decodeURIComponent(location.hash.slice(1));const q=document.getElementById("q").value.trim().toLowerCase();if(h)profile(h);else if(q)search(q);else feed()}
 window.addEventListener("hashchange",route);
-document.getElementById("q").oninput=e=>{location.hash="";list(e.target.value.toLowerCase())};
+document.getElementById("q").oninput=()=>{if(location.hash)location.hash="";else route()};
 route();
 </script>
 </body>
