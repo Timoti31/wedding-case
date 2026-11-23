@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Алина & Дима · 14.11.2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#3b3330;--soft:#8a7d76;--bg:#fbf7f2;--card:#fff;--accent:#b88a6e;--line:#eadfd5}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;font-weight:300}
+  h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400}
+  .notice{background:#3b3330;color:#f3e9e1;text-align:center;padding:10px 16px;font-size:14px;letter-spacing:.03em}
+  nav{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;padding:18px 12px;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+  nav a{color:var(--soft);text-decoration:none}
+  nav a:hover{color:var(--accent)}
+  .hero{position:relative;height:78vh;min-height:460px;background:url(img/hero.jpg) center 30%/cover}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.45))}
+  .hero .txt{position:absolute;bottom:9%;left:0;right:0;text-align:center;color:#fff;z-index:1}
+  .hero h1{font-size:clamp(48px,9vw,96px);line-height:1}
+  .hero p{letter-spacing:.3em;text-transform:uppercase;font-size:14px;margin-top:10px}
+  section{max-width:880px;margin:0 auto;padding:72px 22px}
+  section h2{font-size:42px;text-align:center;margin-bottom:28px}
+  .count{display:flex;justify-content:center;gap:18px;margin-top:6px}
+  .count div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:84px;text-align:center}
+  .count b{display:block;font-family:"Cormorant Garamond",serif;font-size:40px;font-weight:600}
+  .count span{font-size:12px;color:var(--soft);text-transform:uppercase;letter-spacing:.1em}
+  .story p{font-family:"Cormorant Garamond",serif;font-size:23px;text-align:center;font-style:italic;color:#5a4e48}
+  .prog{display:grid;gap:14px}
+  .prog .row{display:flex;gap:20px;align-items:baseline;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 22px}
+  .prog time{font-family:"Cormorant Garamond",serif;font-size:30px;color:var(--accent);min-width:90px}
+  .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .tbl h3{font-size:24px;margin-bottom:8px}
+  .tbl li{list-style:none;font-size:15px;padding:3px 0;border-bottom:1px dashed var(--line)}
+  .tbl li small{color:var(--soft)}
+  .lock{max-width:420px;margin:0 auto;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px}
+  .lock input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:18px;text-align:center;letter-spacing:.3em;margin:14px 0}
+  .lock button{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:12px 26px;font:inherit;cursor:pointer}
+  .lock .err{color:#b0413e;font-size:14px;min-height:20px;margin-top:8px}
+  .grid{display:none;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .grid figure{background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+  .grid img{width:100%;height:300px;object-fit:cover;display:block}
+  .grid figcaption{padding:10px 14px;font-size:14px;color:var(--soft)}
+  .org{text-align:center}
+  .org a{color:var(--accent)}
+  footer{text-align:center;color:var(--soft);font-size:13px;padding:40px 20px 60px}
+</style>
+</head>
+<body>
+<div class="notice">Дорогие гости, мероприятие 14 ноября перенесено. О новой дате сообщим дополнительно.</div>
+<nav><a href="#date">Дата</a><a href="#story">История</a><a href="#program">Программа</a><a href="#guests">Гости</a><a href="#gallery">Галерея</a></nav>
+
+<div class="hero"><div class="txt"><h1>Алина & Дима</h1><p>14 · 11 · 2026 · Марани Сигнахи</p></div></div>
+
+<section id="date">
+  <h2>До свадьбы осталось</h2>
+  <div class="count"><div><b>00</b><span>дней</span></div><div><b>00</b><span>часов</span></div><div><b>00</b><span>минут</span></div></div>
+</section>
+
+<section id="story" class="story">
+  <h2>Наша история</h2>
+  <p>Мы познакомились в тот самый вечер, когда Костя праздновал свой день рождения на крыше в Ваке. Дима пролил на меня вино, а потом полчаса извинялся. Через три года он сделал предложение на той же крыше.</p>
+</section>
+
+<section id="program">
+  <h2>Программа дня</h2>
+  <div class="prog">
+    <div class="row"><time>13:00</time><div>Трансфер от площади Свободы в Сигнахи</div></div>
+    <div class="row"><time>15:30</time><div>Церемония на террасе винодельни «Марани Сигнахи»</div></div>
+    <div class="row"><time>17:00</time><div>Супра: ужин, тосты, танцы до утра</div></div>
+  </div>
+</section>
+
+<section id="guests">
+  <h2>Рассадка гостей</h2>
+  <div class="tables">
+    <div class="tbl"><h3>Стол 1 · семья</h3><ul>
+      <li>Виктор Миронов</li>
+      <li>Тамара</li>
+      <li>Наталья Соколова <small>· по вопросам со стороны жениха: <span class="tg">@natalya_sokolova</span></small></li>
+      <li>Костя Орлов <small>· свидетель</small></li>
+      <li>Гоша Цулая <small>· <span class="tg">@gosha_tsulaia</span></small></li>
+    </ul></div>
+    <div class="tbl"><h3>Стол 2 · друзья невесты</h3><ul>
+      <li>Саломе</li><li>Мариам</li><li>Катя</li><li>Ника</li><li>Ирина</li>
+    </ul></div>
+    <div class="tbl"><h3>Стол 3 · друзья жениха</h3><ul>
+      <li>Андрей</li><li>Леван</li><li>Сергей</li><li>Паша</li><li>Дато</li>
+    </ul></div>
+    <div class="tbl"><h3>Стол 4 · коллеги</h3><ul>
+      <li>Коллеги из Northbridge Audit</li><li>Коллеги Алины из студии</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="gallery">
+  <h2>Галерея</h2>
+  <div class="lock" id="lock">
+    <p>Галерея только для своих.<br>Пароль: день, когда мы встретились (ДДММ)</p>
+    <input id="pw" inputmode="numeric" maxlength="4" placeholder="····">
+    <button id="go">Открыть</button>
+    <div class="err" id="err"></div>
+  </div>
+  <div class="grid" id="grid">
+    <figure><img src="img/hero.jpg" alt=""><figcaption>Нарикала, наш закат</figcaption></figure>
+    <figure><img src="img/g_kitchen.jpg" alt=""><figcaption>Первые хинкали собственного производства</figcaption></figure>
+    <figure><img src="img/g_mountains.jpg" alt=""><figcaption>Поход, июль</figcaption></figure>
+    <figure><img src="img/g_dima.jpg" alt=""><figcaption>Мой любимый в любимой куртке</figcaption></figure>
+    <figure><img src="img/g_alina.jpg" alt=""><figcaption>Утро перед примеркой</figcaption></figure>
+    <figure><img src="img/g_decor.jpg" alt=""><figcaption>Выбираем декор в агентстве, сентябрь</figcaption></figure>
+  </div>
+</section>
+
+<section class="org">
+  <h2>Организатор</h2>
+  <p>Свадьбу организует <a href="https://supra-events.vercel.app" target="_blank">Supra Events</a>.<br>По всем вопросам: Нино, <span class="tg">@supra_nino</span></p>
+</section>
+
+<footer>Алина & Дима · 2026</footer>
+
+<script>
+const H="52ed8fba503e8a9d8e235041ef867cd3cdcd7426125a5e322859c1c3e826c876";
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function tryOpen(){
+  const v=document.getElementById("pw").value.trim();
+  if(await sha(v)===H){document.getElementById("lock").style.display="none";document.getElementById("grid").style.display="grid"}
+  else{document.getElementById("err").textContent="Неверный пароль"}
+}
+document.getElementById("go").onclick=tryOpen;
+document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")tryOpen()});
+</script>
+</body>
+</html>
