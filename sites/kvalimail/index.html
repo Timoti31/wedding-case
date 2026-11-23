@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KvaliMail</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#f4f1ec;color:#222}
+  .bar{background:#c2452d;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:10px}
+  .bar b{font-size:20px;letter-spacing:.02em}
+  .bar .u{margin-left:auto;font-size:14px;opacity:.9}
+  .login{max-width:380px;margin:9vh auto;background:#fff;border-radius:12px;box-shadow:0 6px 30px rgba(0,0,0,.08);padding:32px}
+  .login h1{font-size:22px;margin-bottom:18px}
+  .login input{width:100%;padding:12px;border:1px solid #d6cfc6;border-radius:8px;font-size:16px;margin-bottom:12px}
+  .login button{width:100%;padding:12px;background:#c2452d;color:#fff;border:0;border-radius:8px;font-size:16px;cursor:pointer}
+  .err{color:#c0392b;font-size:14px;min-height:20px;margin-top:10px}
+  .app{display:none;max-width:1100px;margin:0 auto;padding:14px}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tabs button{border:0;background:#fff;border-radius:20px;padding:8px 16px;cursor:pointer;font-size:14px}
+  .tabs button.on{background:#c2452d;color:#fff}
+  .tabs input{margin-left:auto;padding:8px 12px;border:1px solid #d6cfc6;border-radius:20px;min-width:160px}
+  .list{background:#fff;border-radius:10px;overflow:hidden}
+  .row{display:grid;grid-template-columns:200px 1fr 120px;gap:12px;padding:12px 16px;border-bottom:1px solid #f0ebe4;cursor:pointer;font-size:14px}
+  .row:hover{background:#fbf7f2}
+  .row.unread{font-weight:700}
+  .row span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .row .d{color:#888;text-align:right}
+  @media(max-width:700px){.row{grid-template-columns:1fr;gap:2px}.row .d{text-align:left}}
+  .view{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:14px;z-index:9}
+  .view .box{background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:22px}
+  .view .h{color:#666;font-size:13px;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:12px;line-height:1.6}
+  .view h3{margin-bottom:8px}
+  .view .x{float:right;border:0;background:#f0ebe4;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px}
+  .view p{margin-bottom:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="bar"><b>KvaliMail</b><span class="u" id="who"></span></div>
+<div class="login" id="login">
+  <h1>Вход в почту</h1>
+  <input id="u" placeholder="Электронная почта" autocomplete="off">
+  <input id="p" type="password" placeholder="Пароль">
+  <button id="go">Войти</button>
+  <div class="err" id="err"></div>
+</div>
+<div class="app" id="app">
+  <div class="tabs"><button class="on" data-f="inbox">Входящие</button><button data-f="sent">Отправленные</button><input id="q" placeholder="Поиск"></div>
+  <div class="list" id="list"></div>
+</div>
+<div class="view" id="view"><div class="box"><button class="x" onclick="document.getElementById('view').style.display='none'">×</button><h3 id="vs"></h3><div class="h" id="vh"></div><div id="vb"></div></div></div>
+<script src="box.js"></script>
+<script>
+async function decryptPayload(p, secret){
+  const d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:d(p.s),iterations:p.n,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:d(p.i)},key,d(p.c));
+  return new TextDecoder().decode(pt);
+}
+let D=null,folder="inbox";
+async function login(){
+  const e=document.getElementById("err");e.textContent="Вход...";
+  const u=document.getElementById("u").value.trim().toLowerCase().split("@")[0];
+  const p=document.getElementById("p").value;
+  try{D=JSON.parse(await decryptPayload(window.BOX,u+"|"+p));
+    document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";
+    document.getElementById("who").textContent=D.name+" · "+D.user;render();
+  }catch(x){e.textContent="Неверная почта или пароль"}
+}
+document.getElementById("go").onclick=login;
+document.getElementById("p").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");folder=b.dataset.f;render()});
+document.getElementById("q").oninput=render;
+function render(){
+  const q=document.getElementById("q").value.toLowerCase();
+  const items=D.mails.map((m,i)=>({m,i})).filter(({m})=>m.folder===folder&&(!q||(m.subject+m.from+m.to+m.body).toLowerCase().includes(q)));
+  document.getElementById("list").innerHTML=items.length?items.map(({m,i})=>`<div class="row ${m.unread?"unread":""}" onclick="openM(${i})"><span>${folder==="sent"?"Кому: "+m.to:m.from}</span><span>${m.subject}</span><span class="d">${m.date.slice(0,10)}</span></div>`).join(""):'<div style="padding:20px;color:#888">Писем нет</div>';
+}
+function openM(i){
+  const m=D.mails[i];m.unread=false;
+  document.getElementById("vs").textContent=m.subject;
+  document.getElementById("vh").innerHTML=`От: ${m.from}<br>Кому: ${m.to}${m.cc?"<br>Копия: "+m.cc:""}<br>Дата: ${m.date}`;
+  document.getElementById("vb").innerHTML=m.body;
+  document.getElementById("view").style.display="flex";render();
+}
+</script>
+</body>
+</html>

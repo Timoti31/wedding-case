@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>g0sha :: tools</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0b0f0c;color:#4af07a;font-family:"JetBrains Mono","Fira Code",Consolas,monospace;font-size:14px;padding:18px}
+  h1{font-size:16px;color:#8affb0;margin-bottom:4px}
+  .dim{color:#2f8f4f}
+  .panel{border:1px solid #1d4a2b;border-radius:6px;padding:14px;margin-top:14px;background:#0e1510}
+  label{display:block;color:#7fd99c;margin:8px 0 4px}
+  input,textarea{width:100%;background:#050806;color:#b6ffcb;border:1px solid #1d4a2b;border-radius:4px;padding:10px;font:inherit}
+  textarea{height:150px;resize:vertical}
+  button{margin-top:12px;background:#1f7a3d;color:#eaffef;border:0;border-radius:4px;padding:10px 18px;font:inherit;cursor:pointer}
+  button:disabled{opacity:.5}
+  #out{white-space:pre-wrap;margin-top:14px;height:46vh;overflow:auto;background:#050806;border:1px solid #1d4a2b;border-radius:6px;padding:12px;line-height:1.5}
+  .ok{color:#fff;background:#1f7a3d;padding:2px 6px}
+  .bad{color:#ff6b6b}
+  .bar{height:6px;background:#132a1b;border-radius:3px;margin-top:10px;overflow:hidden}
+  .bar div{height:100%;width:0;background:#4af07a;transition:width .1s}
+</style>
+</head>
+<body>
+<h1>g0sha :: dict-brute v2.3</h1>
+<div class="dim">// для своих. не спрашивайте, откуда это у меня</div>
+
+<div class="panel">
+  <label>Цель</label>
+  <input id="target" value="skybox.cloud :: d.sokolov" readonly>
+  <label>Словарь (слова, имена, клички, даты, числа: через запятую, пробел или с новой строки)</label>
+  <textarea id="words" placeholder="алина, дима, тбилиси, 1997 ..."></textarea>
+  <button id="run">▶ Запустить</button>
+  <div class="bar"><div id="bar"></div></div>
+  <div id="out"><span class="dim">ожидание запуска...</span></div>
+</div>
+
+<script>
+const TARGET="3e593740364c1091cbc6126d36e65eea409c1a490cd33119c8d2e8d44cace116";
+const TR={"а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"e","ж":"zh","з":"z","и":"i","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"h","ц":"ts","ч":"ch","ш":"sh","щ":"sch","ъ":"","ы":"y","ь":"","э":"e","ю":"yu","я":"ya"};
+function translit(w){
+  const out=new Set([""]);
+  for(const ch of w){
+    const opts=ch==="й"?["i","y","j"]:[TR[ch]!==undefined?TR[ch]:ch];
+    const next=new Set();
+    for(const pre of out)for(const o of opts)next.add(pre+o);
+    out.clear();next.forEach(x=>out.add(x));
+    if(out.size>27)break;
+  }
+  return [...out];
+}
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+const noise=["123456","qwerty","password","111111","iloveyou","admin","letmein","sunshine","dragon","monkey","football","tbilisi2024","welcome1"];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const out=document.getElementById("out"),bar=document.getElementById("bar");
+function log(t,cls){const s=document.createElement("div");if(cls)s.className=cls;s.textContent=t;out.appendChild(s);out.scrollTop=out.scrollHeight}
+document.getElementById("run").onclick=async()=>{
+  const btn=document.getElementById("run");btn.disabled=true;out.innerHTML="";
+  const raw=document.getElementById("words").value.toLowerCase().split(/[\s,;]+/).filter(Boolean);
+  const nums=[...new Set(raw.filter(x=>/^\d+$/.test(x)))];
+  const words=new Set();
+  raw.filter(x=>!/^\d+$/.test(x)).forEach(w=>{const clean=w.replace(/[^a-zа-яё0-9]/g,"");if(!clean)return;words.add(clean);translit(clean).forEach(t=>words.add(t))});
+  const cands=[];
+  words.forEach(w=>{cands.push(w);nums.forEach(n=>{cands.push(w+n);cands.push(n+w)})});
+  nums.forEach(n=>cands.push(n));
+  log("[*] цель: skybox.cloud :: d.sokolov");
+  log(`[*] слов: ${words.size}, чисел: ${nums.length}, комбинаций: ${cands.length+noise.length}`);
+  log("[*] обход rate-limit через прокси-пул... ок");
+  await sleep(600);
+  let found=null;const all=[...noise,...cands];
+  for(let i=0;i<all.length;i++){
+    const c=all[i];
+    const h=await sha("skybox:"+c);
+    bar.style.width=Math.round((i+1)/all.length*100)+"%";
+    if(h===TARGET){found=c;log(`[${String(i+1).padStart(4,"0")}] ${c.padEnd(22)} ✓ MATCH`);break}
+    log(`[${String(i+1).padStart(4,"0")}] ${c.padEnd(22)} ✗`,"dim");
+    await sleep(all.length>300?8:45);
+  }
+  await sleep(500);
+  if(found){
+    log("");
+    log("[+] ПАРОЛЬ НАЙДЕН","ok");
+    log(`    логин:  d.sokolov`);
+    log(`    пароль: ${found}`);
+    log(`    вход:   skybox (ссылка у Гоши)`);
+  }else{
+    log("");
+    log("[-] НЕ НАЙДЕНО. словарь слабый, нужны слова из его жизни: клички, даты, имена близких","bad");
+  }
+  btn.disabled=false;
+};
+</script>
+</body>
+</html>

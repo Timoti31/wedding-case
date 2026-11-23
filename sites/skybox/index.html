@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyBox · Облачное хранилище</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#f2f5f9;color:#1d2a3a}
+  .top{background:#fff;border-bottom:1px solid #dde4ec;padding:12px 20px;display:flex;align-items:center;gap:10px}
+  .top .logo{font-weight:700;font-size:20px;color:#2b6fd6}
+  .top .logo span{color:#1d2a3a}
+  .top .user{margin-left:auto;font-size:14px;color:#5b6b7d}
+  .login{max-width:380px;margin:9vh auto;background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(20,40,80,.08);padding:34px}
+  .login h1{font-size:22px;margin-bottom:6px}
+  .login p{color:#6a7889;font-size:14px;margin-bottom:20px}
+  .login label{font-size:13px;color:#5b6b7d}
+  .login input{width:100%;padding:12px;border:1px solid #cfd8e3;border-radius:8px;font-size:16px;margin:6px 0 14px}
+  .login button{width:100%;padding:12px;background:#2b6fd6;color:#fff;border:0;border-radius:8px;font-size:16px;cursor:pointer}
+  .login .err{color:#c0392b;font-size:14px;min-height:20px;margin-top:10px}
+  .login .forgot{display:block;text-align:center;margin-top:14px;font-size:13px;color:#2b6fd6;cursor:pointer}
+  .app{display:none;max-width:1000px;margin:24px auto;padding:0 16px}
+  .crumbs{font-size:14px;color:#5b6b7d;margin-bottom:14px}
+  .crumbs a{color:#2b6fd6;cursor:pointer}
+  .list{background:#fff;border-radius:12px;border:1px solid #dde4ec}
+  .item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #eef2f6;cursor:pointer}
+  .item:last-child{border-bottom:0}
+  .item:hover{background:#f6f9fd}
+  .ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#e8f0fc}
+  .item small{margin-left:auto;color:#8a97a6;font-size:12px}
+  .viewer{position:fixed;inset:0;background:rgba(15,25,40,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+  .viewer .box{background:#fff;border-radius:12px;max-width:820px;width:100%;max-height:90vh;overflow:auto;padding:22px;position:relative}
+  .viewer .x{position:sticky;top:0;float:right;background:#eef2f6;border:0;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer}
+  .viewer img{max-width:100%;border-radius:8px}
+  .viewer h4{margin-bottom:12px;font-size:15px;color:#5b6b7d}
+</style>
+</head>
+<body>
+<div class="top"><div class="logo">Sky<span>Box</span></div><div class="user" id="who"></div></div>
+
+<div class="login" id="login">
+  <h1>Вход в SkyBox</h1>
+  <p>Ваши файлы в безопасности.</p>
+  <label>Логин</label><input id="u" autocomplete="off" placeholder="name или name@domain">
+  <label>Пароль</label><input id="p" type="password">
+  <button id="go">Войти</button>
+  <div class="err" id="err"></div>
+  <span class="forgot" onclick="document.getElementById('err').textContent='Ссылка для восстановления отправлена на привязанную почту.'">Забыли пароль?</span>
+</div>
+
+<div class="app" id="app">
+  <div class="crumbs" id="crumbs"></div>
+  <div class="list" id="list"></div>
+</div>
+
+<div class="viewer" id="viewer"><div class="box"><button class="x" onclick="closeV()">×</button><h4 id="vt"></h4><div id="vb"></div></div></div>
+
+<script src="vault.js"></script>
+<script>
+async function decryptPayload(p, secret){
+  const d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:d(p.s),iterations:p.n,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:d(p.i)},key,d(p.c));
+  return new TextDecoder().decode(pt);
+}
+let DATA=null;
+async function login(){
+  const err=document.getElementById("err");
+  let u=document.getElementById("u").value.trim().toLowerCase().split("@")[0];
+  const p=document.getElementById("p").value;
+  err.textContent="Проверяем...";
+  try{
+    DATA=JSON.parse(await decryptPayload(window.VAULT,u+"|"+p));
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+    document.getElementById("who").textContent=DATA.user;
+    root();
+  }catch(e){err.textContent="Неверный логин или пароль."}
+}
+document.getElementById("go").onclick=login;
+document.getElementById("p").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+function root(){
+  document.getElementById("crumbs").innerHTML="Мои файлы";
+  document.getElementById("list").innerHTML=DATA.folders.map((f,i)=>`<div class="item" onclick="openF(${i})"><div class="ico">📁</div>${f.name}<small>${f.files.length} файл.</small></div>`).join("");
+}
+function openF(i){
+  const f=DATA.folders[i];
+  document.getElementById("crumbs").innerHTML=`<a onclick="root()">Мои файлы</a> / ${f.name}`;
+  document.getElementById("list").innerHTML=f.files.map((x,j)=>`<div class="item" onclick="openX(${i},${j})"><div class="ico">${x.type==="img"?"🖼️":"📄"}</div>${x.name}</div>`).join("");
+}
+function openX(i,j){
+  const x=DATA.folders[i].files[j];
+  document.getElementById("vt").textContent=x.name;
+  document.getElementById("vb").innerHTML=x.type==="img"?`<img src="${x.src}">`:x.html;
+  document.getElementById("viewer").style.display="flex";
+}
+function closeV(){document.getElementById("viewer").style.display="none"}
+</script>
+</body>
+</html>
