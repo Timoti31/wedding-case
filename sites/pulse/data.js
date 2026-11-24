@@ -1,7 +1,7 @@
 // Pulse data. Posts with missing images are hidden automatically.
 window.PULSE = {
 main: {
- dima:{name:"Дима Соколов",nick:"dima.sokolov",bio:"аудитор @ Northbridge Audit\nТбилиси · горы · хинкали",ava:"img/dima_ava.jpg",f:"412",fl:"388",posts:[
+ dima:{name:"Дима Соколов",nick:"dima.sokolov",site:["northbridge-audit.vercel.app","https://northbridge-audit.vercel.app"],bio:"аудитор @ Northbridge Audit\nТбилиси · горы · хинкали",ava:"img/dima_ava.jpg",f:"412",fl:"388",posts:[
   {txt:"Иногда цифры говорят больше, чем люди.",d:"10.11.2026",l:31,c:[["kostya.orlov","ты в порядке? 🤨"],["g0sha","аудиторы и их философия"]]},
   {img:"img/p02.jpg",t:"Пятница, 23:40. Кто-то веселится, а кто-то сверяет кассу с банком 🙃",d:"23.10.2026",l:44,c:[["alina.mironova","домой!!!"],["kostya.orlov","брат, жизнь проходит"]]},
   {img:"img/p04.jpg",t:"Традиция пятницы",d:"02.10.2026",l:57,c:[["g0sha","без меня??"]]},
@@ -32,12 +32,12 @@ main: {
   {img:"img/p13.jpg",t:"Ника. Свет из окна и никакой ретуши",d:"30.09.2026",l:512,c:[]},
   {img:"img/p15.jpg",t:"Утро в Старом городе",d:"21.08.2026",l:276,c:[]},
   {img:"img/p14.jpg",t:"Лифт, камера, никакой мотивации",d:"03.07.2026",l:198,c:[["g0sha","кадр года"]]}]},
- nino:{name:"Нино Квициани",nick:"supra.nino",bio:"wedding planner · Supra Events ✨\nсвадьбы в Грузии под ключ",ava:"img/nino_ava.jpg",f:"9 870",fl:"1 204",stories:[{img:"img/nino_story.jpg",cap:"12.11, 19:40",txt:"работаем до ночи 💼"}],posts:[
+ nino:{name:"Нино Квициани",nick:"supra.nino",site:["supra-events.vercel.app","https://supra-events.vercel.app"],bio:"wedding planner · Supra Events ✨\nсвадьбы в Грузии под ключ",ava:"img/nino_ava.jpg",f:"9 870",fl:"1 204",stories:[{img:"img/nino_story.jpg",cap:"12.11, 19:40",txt:"работаем до ночи 💼"}],posts:[
   {txt:"Сезон 2026 был волшебным 💍✨ Спасибо всем нашим парам!",d:"30.10.2026",l:221,c:[["olga_m","спасибо вам!!"]]},
   {img:"img/p16.jpg",t:"Детали решают все 🤍",d:"12.10.2026",l:348,c:[]},
   {img:"img/p17.jpg",t:"Моя невеста сентября 💍 Счастье в каждом кадре",d:"06.09.2026",l:402,c:[["ksenia.t","Нино, вы чудо!"]]},
   {img:"img/p18.jpg",t:"Понедельник в офисе начинается с пионов",d:"18.05.2026",l:187,c:[]}]},
- gela:{name:"Гела Беридзе",nick:"gela.beridze",bio:"водитель · трансферы · VIP\n+995 555 01 47 22\nToyota Land Cruiser GG-147-GG",ava:"img/gela_ava.jpg",f:"96",fl:"40",posts:[
+ gela:{name:"Гела Беридзе",nick:"gela.beridze",site:["mironov-group.vercel.app","https://mironov-group.vercel.app"],bio:"водитель · трансферы · VIP\n+995 555 01 47 22\nToyota Land Cruiser GG-147-GG",ava:"img/gela_ava.jpg",f:"96",fl:"40",posts:[
   {img:"img/gela_car.jpg",t:"Военно-Грузинская, как всегда без пробок",d:"02.10.2026",l:23,c:[]},
   {img:"img/p20.jpg",t:"Ночью в горы. Работа такая",d:"14.08.2026",l:12,c:[]},
   {img:"img/p19.jpg",t:"Арагви сегодня добрая",d:"07.06.2026",l:31,c:[["v.mironov","Молодец."]]}]},
@@ -56,7 +56,7 @@ main: {
 },
 // background accounts
 extra:[
- {nick:"tbilisi.today",name:"Tbilisi Today",bio:"новости и события Тбилиси",f:"84 300",posts:[["img/p28.jpg","Тбилиси сегодня вечером 🌆","22.11.2026",2140],[null,"На проспекте Руставели в выходные перекроют движение: забег и ярмарка","20.11.2026",890],["img/p31.jpg","Первый настоящий осенний дождь. Берегите себя ☔","15.11.2026",1720]]},
+ {nick:"tbilisi.today",name:"Tbilisi Today",bio:"новости и события Тбилиси",site:["форум «Тбилиси для своих»","https://tbilisi-svoi.vercel.app"],f:"84 300",posts:[["img/p28.jpg","Тбилиси сегодня вечером 🌆","22.11.2026",2140],[null,"На проспекте Руставели в выходные перекроют движение: забег и ярмарка","20.11.2026",890],["img/p31.jpg","Первый настоящий осенний дождь. Берегите себя ☔","15.11.2026",1720]]},
  {nick:"eat.in.georgia",name:"Eat in Georgia",bio:"фуд-блог · где поесть в Грузии",f:"41 900",posts:[["img/p27.jpg","Аджарули в новом месте на Марджанишвили. Тесто 10/10","19.11.2026",3110],[null,"Топ-5 хинкальных Старого города: сохраняйте пост, завтра выйдет обзор","16.11.2026",1204]]},
  {nick:"corgi.giorgi",name:"Гиорги корги",bio:"я корги. живу в Ваке. люблю мясо",f:"12 400",posts:[["img/p29.jpg","национальный костюм надет, жду хинкали","18.11.2026",5320]]},
  {nick:"svaneti.hikes",name:"Svaneti Hikes",bio:"походы по Грузии · группы каждую неделю",f:"8 700",posts:[["img/p30.jpg","Местиа — Ушгули, 4 дня, сезон закрыт. До встречи в июне!","01.10.2026",640]]},
