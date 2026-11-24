@@ -131,7 +131,12 @@ export async function startGame(chatId) {
   await sendItem('alina', chatId, 'alina_start');
   await sendParts('alina', chatId, [
     'дима пропал. с утра 13го телефон выключен, свадьбу отменили',
-    `вот наш сайт, там все про свадьбу и гостей ${SITE}`,
+    'вот скрины из чата гостей, там все как было. вас туда добавить не могу, там папа админ и он против',
+  ]);
+  const gc = ['467e1113118e', '67e51f8307d5', '16205cc47afb', '058737818ad5', 'a088ea8ad45d'];
+  await tg('alina', 'sendMediaGroup', { chat_id: chatId, media: gc.map((n) => ({ type: 'photo', media: `${BASE()}/m/${n}.jpg` })) });
+  await sendParts('alina', chatId, [
+    `и наш сайт, там все про свадьбу и гостей ${SITE}`,
     'если что-то найдете пишите мне сюда через @, я все время на связи',
   ]);
 }
