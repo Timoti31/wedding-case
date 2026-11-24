@@ -43,8 +43,8 @@ async function gemini(system, messages, tier) {
 async function groq(system, messages) {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error('нет GROQ_API_KEY');
-  const models = (process.env.GROQ_MODEL || 'openai/gpt-oss-120b,llama-3.3-70b-versatile').split(',');
-  let err;
+  const models = (process.env.GROQ_MODEL || 'minimaxai/minimax-m2.7,qwen/qwen3.8-27b,openai/gpt-oss-120b').split(',').map((m) => m.trim());
+  const fails = [];
   for (const model of models) {
     const body = {
       model,
@@ -59,12 +59,32 @@ async function groq(system, messages) {
       signal: AbortSignal.timeout(T),
       body: JSON.stringify(body),
     });
-    const j = await res.json();
-    const text = j.choices?.[0]?.message?.content?.trim();
-    if (res.ok && text) return { text, provider: 'groq/' + model };
-    err = new Error(`groq ${model} ${res.status}: ${j.error?.message || 'пусто'}`);
+    const j = await res.json().catch(() => ({}));
+    const text = stripThink(j.choices?.[0]?.message?.content || '');
+    if (res.ok && text) return { text, provider: 'groq/' + model, fails };
+    fails.push(`${model} ${res.status}: ${(j.error?.message || 'пусто').slice(0, 120)}`);
   }
-  throw err;
+  throw new Error('groq: ' + fails.join(' | '));
+}
+
+function stripThink(t) {
+  return t.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^[\s\S]*<\/think>/i, '').trim();
+}
+
+async function mistral(system, messages, tier) {
+  const key = process.env.MISTRAL_API_KEY;
+  if (!key) throw new Error('нет MISTRAL_API_KEY');
+  const model = tier === 'main' ? process.env.MISTRAL_MODEL_MAIN || 'mistral-large-latest' : process.env.MISTRAL_MODEL_LITE || 'mistral-medium-latest';
+  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(T),
+    body: JSON.stringify({ model, temperature: 0.8, max_tokens: 800, messages: [{ role: 'system', content: system }, ...messages] }),
+  });
+  const j = await res.json().catch(() => ({}));
+  const text = stripThink(j.choices?.[0]?.message?.content || '');
+  if (!res.ok || !text) throw new Error(`mistral ${res.status}: ${j.message || j.error?.message || 'пусто'}`);
+  return { text, provider: 'mistral/' + model };
 }
 
 async function claude(system, messages, tier) {
@@ -89,7 +109,7 @@ async function claude(system, messages, tier) {
   return { text: j.content.map((c) => c.text || '').join('').trim(), provider: 'claude/' + model };
 }
 
-const providers = { gemini, groq, claude };
+const providers = { gemini, groq, claude, mistral };
 
 export async function complete(system, messages, tier = 'lite') {
   const order = (process.env.LLM_ORDER || 'gemini,groq').split(',').map((s) => s.trim());
@@ -97,7 +117,7 @@ export async function complete(system, messages, tier = 'lite') {
   for (const p of order) {
     try {
       const res = await providers[p](system, messages, tier);
-      return { ...res, errors };
+      return { ...res, errors: [...errors, ...(res.fails || [])] };
     } catch (e) {
       errors.push(String(e.message || e));
     }
