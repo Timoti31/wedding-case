@@ -16,8 +16,10 @@ async function state() {
     blocked[b] = !!(await r('GET', `g:block:${b}`));
   }
   const chats = Object.entries(toObj(chatsRaw)).map(([id, v]) => ({ id, ...JSON.parse(v) }));
+  const botChats = {};
+  for (const b of Object.keys(chars)) botChats[b] = (await r('SMEMBERS', `g:cb:${b}`)) || [];
   return {
-    stage, trust, blocked, given, flags, main, guests, outbox: outN, bots: toObj(botsRaw), chats,
+    stage, trust, blocked, given, flags, main, guests, outbox: outN, bots: toObj(botsRaw), chats, botChats,
     leaks: (leaks || []).map((x) => JSON.parse(x)),
     log: (logRaw || []).map((x) => JSON.parse(x)),
   };
@@ -40,6 +42,7 @@ export default async function handler(req, res) {
       if (op === 'phish') { await r('SET', 'g:phished', 1); await log('trap', 'panel', 'Нино попалась: данные в панели Гоши'); }
       if (op === 'say') {
         await tg(b.bot, 'sendMessage', { chat_id: b.chat, text: b.text });
+        await r('RPUSH', `g:h:${b.bot}:${b.chat}`, JSON.stringify({ role: 'assistant', content: b.text }));
         await log('say', b.bot, `ведущий -> ${b.chat}: ${b.text}`);
       }
       return res.json({ ok: true });
@@ -79,7 +82,7 @@ small{color:#888}
 <p><small>Добавь Алину в группу «Ищем Диму» и напиши там что угодно, группа появится здесь. Затем «Начать игру».</small></p>
 <button class="red" onclick="if(confirm('Сбросить игру? Этап, доверие, история, утечки удалятся.'))post('reset',{})">Сбросить игру</button></div>
 <div class="card"><h3>Написать от персонажа</h3>
-<select id="sb"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
+<select id="sb" onchange="fillChats()"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
 <button onclick="say()">Отправить</button></div>
 <div class="card"><h3>Ловушка Гоши</h3><p><small>Пока бота Нино нет: если игроки отправили ей убедительное письмо со ссылкой, нажми кнопку, и данные появятся в панели Гоши.</small></p><button onclick="post('phish',{})">Нино попалась</button></div>
 <div class="card"><h3>Выдано и утечки</h3><div id="given"></div></div>
@@ -99,13 +102,14 @@ async function load(){
  document.getElementById('upd').textContent=new Date().toLocaleTimeString();
  document.getElementById('stages').innerHTML=[1,2,3,4,5].map(n=>'<button class="'+(n==S.stage?'on':'sec')+'" onclick="post(\\'stage\\',{stage:'+n+'})">'+n+'</button>').join('');
  document.getElementById('trust').innerHTML=Object.entries(S.trust).map(([b,v])=>'<tr><td>'+(NAMES[b]||b)+(S.bots[b]?' <small>@'+S.bots[b]+'</small>':'')+(S.blocked[b]?' <b style="color:#c92a2a">блок</b> <button class=sec onclick="post(\\'unblock\\',{bot:\\''+b+'\\'})">снять</button>':'')+'</td><td><input type=number min=0 max=10 value="'+v+'" style="width:60px" onchange="post(\\'trust\\',{bot:\\''+b+'\\',value:this.value})"></td></tr>').join('');
- document.getElementById('chats').innerHTML=S.chats.map(c=>'<div>'+esc(c.title||c.id)+' <small>'+c.type+'</small> '+(c.id==S.main?'<b>основной</b>':'<button onclick="if(confirm(\\'Начать игру в этом чате?\\'))post(\\'start\\',{chat:\\''+c.id+'\\'})">Начать игру</button>')+(c.id==S.guests?' <b>гости</b>':' <button class=sec onclick="post(\\'guests\\',{chat:\\''+c.id+'\\'})">это чат гостей</button>')+'</div>').join('')||'<small>пока нет</small>';
+ document.getElementById('chats').innerHTML=S.chats.filter(c=>c.type!=='private').map(c=>'<div>'+esc(c.title||c.id)+' <small>'+c.type+'</small> '+(c.id==S.main?'<b>основной</b>':'<button onclick="if(confirm(\\'Начать игру в этом чате?\\'))post(\\'start\\',{chat:\\''+c.id+'\\'})">Начать игру</button>')+(c.id==S.guests?' <b>гости</b>':' <button class=sec onclick="post(\\'guests\\',{chat:\\''+c.id+'\\'})">это чат гостей</button>')+'</div>').join('')||'<small>пока нет</small>';
  const sb=document.getElementById('sb'),sc=document.getElementById('sc');
  if(!sb.options.length){sb.innerHTML=Object.keys(S.trust).map(b=>'<option value="'+b+'">'+(NAMES[b]||b)+'</option>').join('');}
- const cur=sc.value;sc.innerHTML=S.chats.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('');if(cur)sc.value=cur;
+ fillChats();
  document.getElementById('given').innerHTML='<b>Файлы:</b> '+(S.given.join(', ')||'нет')+'<br><b>Секреты:</b> '+(S.flags.map(esc).join('; ')||'нет')+'<br><b>Утечки Виктору:</b><br>'+(S.leaks.map(l=>'<small>'+new Date(l.t).toLocaleTimeString()+'</small> '+esc(l.text)).join('<br>')||'нет');
  document.getElementById('log').innerHTML=S.log.map(l=>'<div class="l k-'+l.kind+'"><small>'+new Date(l.t).toLocaleTimeString()+'</small> <b>'+esc(NAMES[l.bot]||l.bot)+'</b> '+esc(l.text)+'</div>').join('');
 }
-async function say(){const t=document.getElementById('stx');if(!t.value.trim())return;await post('say',{bot:sb.value,chat:sc.value,text:t.value});t.value='';}
+function fillChats(){const sb=document.getElementById('sb'),sc=document.getElementById('sc');const cur=sc.value;const ids=(S.botChats[sb.value]||[]).map(String);const list=S.chats.filter(c=>ids.includes(String(c.id)));sc.innerHTML=list.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('')||'<option value="">нет чатов: игрок должен написать этому боту</option>';if(cur&&list.some(c=>String(c.id)===cur))sc.value=cur;}
+async function say(){const t=document.getElementById('stx');if(!t.value.trim()||!sc.value)return;await post('say',{bot:sb.value,chat:sc.value,text:t.value});t.value='';}
 load();setInterval(()=>{fetch(api('tick')).then(load)},15000);
 </script></body></html>`;

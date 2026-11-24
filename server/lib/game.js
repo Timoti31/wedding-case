@@ -136,6 +136,14 @@ export async function startGame(chatId) {
 }
 
 // ---------- сообщения ----------
+async function rememberChat(bot, c) {
+  const title = c.type === 'private'
+    ? 'личка: ' + [c.first_name, c.last_name].filter(Boolean).join(' ')
+    : c.title || String(c.id);
+  await r('HSET', 'g:chats', c.id, JSON.stringify({ title, type: c.type }));
+  await r('SADD', `g:cb:${bot}`, c.id);
+}
+
 function parse(out) {
   const tags = [];
   let text = out.replace(/\[\[\s*(\w+)\s*(?::([^\]]*))?\]\]/g, (_, k, v) => {
@@ -151,14 +159,16 @@ export async function handleUpdate(bot, u) {
   const ch = chars[bot];
   if (u.my_chat_member) {
     const c = u.my_chat_member.chat;
-    await r('HSET', 'g:chats', c.id, JSON.stringify({ title: c.title || c.first_name || '', type: c.type }));
+    const st = u.my_chat_member.new_chat_member?.status;
+    if (st === 'left' || st === 'kicked') await r('SREM', `g:cb:${bot}`, c.id);
+    else await rememberChat(bot, c);
     return;
   }
   const m = u.message;
   if (!m) return;
   const chat = m.chat;
   const isPrivate = chat.type === 'private';
-  if (!isPrivate) await r('HSET', 'g:chats', chat.id, JSON.stringify({ title: chat.title || '', type: chat.type }));
+  await rememberChat(bot, chat);
 
   let text = m.text || m.caption || '';
   if (m.photo) text = '[прислал(а) картинку] ' + text;
