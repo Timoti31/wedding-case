@@ -12,14 +12,15 @@ export async function getStage() {
   return Number((await r('GET', 'g:stage')) || 1);
 }
 
-export async function getTrust(bot) {
-  const v = await r('HGET', 'g:trust', bot);
+// Доверие личное: у каждого чата (игрока или группы) свое. Блоки тоже личные, кроме общих (Зураб).
+export async function getTrust(bot, chat) {
+  const v = await r('HGET', 'g:trust', `${bot}:${chat}`);
   return v === null ? chars[bot].startTrust : Number(v);
 }
 
-export async function setTrust(bot, val) {
+export async function setTrust(bot, chat, val) {
   const v = Math.max(0, Math.min(10, Math.round(val)));
-  await r('HSET', 'g:trust', bot, v);
+  await r('HSET', 'g:trust', `${bot}:${chat}`, v);
   return v;
 }
 
@@ -237,7 +238,7 @@ export async function handleUpdate(bot, u) {
     await log('blocked', bot, `${who} (Дима еще не открыт): ${text}`);
     return;
   }
-  if (await r('GET', `g:block:${bot}`)) {
+  if ((await r('GET', `g:block:${bot}`)) || (await r('GET', `g:block:${bot}:${chat.id}`))) {
     await log('blocked', bot, `${who}: ${text}`);
     return;
   }
@@ -248,7 +249,7 @@ export async function handleUpdate(bot, u) {
   await log('in', bot, `[${isPrivate ? 'личка' : chat.title}] ${who}: ${text}`);
 
   const [stage, trust, histRaw, given] = await Promise.all([
-    getStage(), getTrust(bot), r('LRANGE', hKey, 0, -1), r('SMEMBERS', 'g:given'),
+    getStage(), getTrust(bot, chat.id), r('LRANGE', hKey, 0, -1), r('SMEMBERS', 'g:given'),
   ]);
   const [phished, ninoAlert, phishFails, ninoLock, dimaOpen] = await r('MGET', 'g:phished', 'g:nino_alert', 'g:phish_fail', 'g:nino_lock', 'g:dima_open');
   const confessed = await r('GET', 'g:confessed');
@@ -285,18 +286,18 @@ export async function handleUpdate(bot, u) {
     if (t.k === 'trust') {
       let v;
       if (t.v.startsWith('=')) {
-        v = await setTrust(bot, parseInt(t.v.slice(1), 10) || 0);
-        await log('trust', bot, `= ${v}`);
+        v = await setTrust(bot, chat.id, parseInt(t.v.slice(1), 10) || 0);
+        await log('trust', bot, `${who}: = ${v}`);
       } else {
         const d = Math.max(-3, Math.min(2, parseInt(t.v, 10) || 0));
         if (!d) continue;
-        v = await setTrust(bot, (await getTrust(bot)) + d);
-        await log('trust', bot, `${d > 0 ? '+' : ''}${d} = ${v}`);
+        v = await setTrust(bot, chat.id, (await getTrust(bot, chat.id)) + d);
+        await log('trust', bot, `${who}: ${d > 0 ? '+' : ''}${d} = ${v}`);
       }
       if (v === 0) {
-        await r('SET', `g:block:${bot}`, 1, 'EX', 1200);
-        await setTrust(bot, 2);
-        await log('trust', bot, 'доверие 0: блок на 20 минут');
+        await r('SET', `g:block:${bot}:${chat.id}`, 1, 'EX', 1200);
+        await setTrust(bot, chat.id, 2);
+        await log('trust', bot, `${who}: доверие 0, блок на 20 минут`);
       }
     } else if (t.k === 'flag') {
       await r('SADD', 'g:flags', `${ch.name}: ${t.v}`);
@@ -350,7 +351,7 @@ export async function handleUpdate(bot, u) {
     if (newStage) await log('stage', bot, `ключевые слова в сообщении игрока: переход на ${newStage}`);
   }
   if (bot === 'kostya' && newStage === 5) {
-    await setTrust('kostya', 9);
+    await setTrust('kostya', chat.id, 9);
     if (!toSend.includes('dima_0740')) toSend.push('dima_0740');
   }
 
