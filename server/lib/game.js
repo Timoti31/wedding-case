@@ -2,7 +2,7 @@
 import { r, getJ, setJ } from './redis.js';
 import { tg, sleep } from './tg.js';
 import { complete } from './llm.js';
-import { chars, items, SITE } from './characters.js';
+import { chars, items, SITE, TRAP } from './characters.js';
 
 export const BASE = () => process.env.PUBLIC_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`;
 const LEAK_DELAY_MS = Number(process.env.LEAK_DELAY_MIN || 20) * 60000;
@@ -55,6 +55,7 @@ async function sendItem(bot, chatId, key) {
   if (it.before) await sendParts(bot, chatId, [it.before]);
   const url = BASE() + it.url;
   if (it.type === 'voice') await tg(bot, 'sendVoice', { chat_id: chatId, voice: url });
+  else if (it.type === 'link') await tg(bot, 'sendMessage', { chat_id: chatId, text: url });
   else await tg(bot, 'sendPhoto', { chat_id: chatId, photo: url, caption: it.caption || '' });
   if (it.after) await sendParts(bot, chatId, [it.after]);
   await r('SADD', 'g:given', key);
@@ -195,6 +196,10 @@ export async function handleUpdate(bot, u) {
   }
   if (/^\//.test(text)) return;
 
+  if (bot === 'dima' && !(await r('GET', 'g:dima_open'))) {
+    await log('blocked', bot, `${who} (Дима еще не открыт): ${text}`);
+    return;
+  }
   if (await r('GET', `g:block:${bot}`)) {
     await log('blocked', bot, `${who}: ${text}`);
     return;
@@ -208,7 +213,9 @@ export async function handleUpdate(bot, u) {
   const [stage, trust, histRaw, given] = await Promise.all([
     getStage(), getTrust(bot), r('LRANGE', hKey, 0, -1), r('SMEMBERS', 'g:given'),
   ]);
-  const ctx = { given: (given || []).filter((k) => items[k]?.by === bot), usernames: names, base: BASE() };
+  const [phished, ninoAlert, phishFails, ninoLock, dimaOpen] = await r('MGET', 'g:phished', 'g:nino_alert', 'g:phish_fail', 'g:nino_lock', 'g:dima_open');
+  const flags = { phished: !!phished, ninoAlert: !!ninoAlert, phishFails: Number(phishFails || 0), ninoLock: !!ninoLock, dimaOpen: !!dimaOpen, hasTrap: text.includes(TRAP) };
+  const ctx = { given: (given || []).filter((k) => items[k]?.by === bot), usernames: names, base: BASE(), flags };
   if (bot === 'viktor') {
     const all = (await r('LRANGE', 'g:leaks', 0, -1)) || [];
     ctx.leaks = all.map((x) => JSON.parse(x)).filter((x) => Date.now() - x.t >= LEAK_DELAY_MS).map((x) => x.text).slice(-15);
@@ -260,7 +267,31 @@ export async function handleUpdate(bot, u) {
       if (ch.canStage.includes(n) && n === stage + 1) newStage = n;
     } else if (t.k === 'give') {
       const it = items[t.v];
-      if (it && it.by === bot && stage >= it.minStage) toSend.push(t.v);
+      if (it && it.by === bot && stage >= it.minStage && !(given || []).includes(t.v) && !toSend.includes(t.v)) toSend.push(t.v);
+    } else if (t.k === 'alert' && bot === 'nino') {
+      await r('SET', 'g:nino_alert', 1);
+      await log('flag', bot, 'Нино настороже');
+    } else if (t.k === 'phished' && bot === 'nino' && flags.hasTrap && stage >= 3 && !flags.ninoLock) {
+      await r('SET', 'g:phished', 1);
+      await r('LPUSH', 'g:trap', JSON.stringify({ t: Date.now(), kind: 'login', login: 'nino.k@supra-events.ge' }));
+      await log('trap', bot, 'Нино попалась: данные в панели Гоши');
+    } else if (t.k === 'phish_fail' && bot === 'nino' && !flags.phished) {
+      const n = await r('INCR', 'g:phish_fail');
+      await log('trap', bot, `Нино не поверила (${n})`);
+      if (n >= 3) {
+        await r('SET', 'g:nino_lock', 1);
+        await r('RPUSH', 'g:leaks', JSON.stringify({ t: Date.now() - LEAK_DELAY_MS, text: 'Нино пожаловалась: кто-то несколько раз пытался выманить у нее пароль от почты' }));
+        await log('trap', bot, 'Нино пожаловалась Виктору, почта закрыта. Запасной путь: Ира');
+      }
+    } else if (t.k === 'bear' && bot === 'zurab' && stage >= 5 && !flags.dimaOpen) {
+      await r('SET', 'g:dima_open', 1);
+      const dimaName = names.dima ? '@' + names.dima : '(бот Димы еще не создан)';
+      await schedule(150000, { bot: 'zurab', chat: chat.id, parts: ['пишите сюда. это наш тихий мальчик', dimaName, 'если вы ему плохо сделаете, я вас найду. а потом накормлю, чтобы стыдно было'] });
+      await log('flag', bot, 'кодовые слова: через 2,5 мин Зураб даст контакт Димы');
+    } else if (t.k === 'alarm' && bot === 'zurab') {
+      await r('SET', 'g:dima_moved', 1);
+      await r('SET', `g:block:${bot}`, 1, 'EX', 6 * 3600);
+      await log('flag', bot, 'игроки назвались людьми Алины/Виктора: Зураб закрылся, Дима предупрежден');
     }
   }
   if (bot === 'kostya' && newStage === 5) {
