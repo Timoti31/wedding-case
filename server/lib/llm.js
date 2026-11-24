@@ -40,10 +40,10 @@ async function gemini(system, messages, tier) {
   return { text, provider: 'gemini/' + model };
 }
 
-async function groq(system, messages) {
+async function groq(system, messages, tier, cfg = {}) {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error('нет GROQ_API_KEY');
-  const models = (process.env.GROQ_MODEL || 'minimaxai/minimax-m2.7,qwen/qwen3.8-27b,openai/gpt-oss-120b').split(',').map((m) => m.trim());
+  const models = (cfg.groq_model || process.env.GROQ_MODEL || 'minimaxai/minimax-m2.7,qwen/qwen3.8-27b,openai/gpt-oss-120b').split(',').map((m) => m.trim());
   const fails = [];
   for (const model of models) {
     const body = {
@@ -111,12 +111,12 @@ async function claude(system, messages, tier) {
 
 const providers = { gemini, groq, claude, mistral };
 
-export async function complete(system, messages, tier = 'lite') {
-  const order = (process.env.LLM_ORDER || 'gemini,groq').split(',').map((s) => s.trim());
+export async function complete(system, messages, tier = 'lite', cfg = {}) {
+  const order = (cfg.llm_order || process.env.LLM_ORDER || 'gemini,groq').split(',').map((s) => s.trim());
   const errors = [];
   for (const p of order) {
     try {
-      const res = await providers[p](system, messages, tier);
+      const res = await providers[p](system, messages, tier, cfg);
       return { ...res, errors: [...errors, ...(res.fails || [])] };
     } catch (e) {
       errors.push(String(e.message || e));

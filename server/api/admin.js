@@ -10,6 +10,7 @@ async function state() {
     r('LRANGE', 'g:log', 0, 120), r('HGETALL', 'g:chats'), r('GET', 'g:chat:main'), r('GET', 'g:chat:guests'),
     r('ZCARD', 'g:out'), r('HGETALL', 'g:bots'),
   ]);
+  const cfg = toObj(await r('HGETALL', 'g:cfg'));
   const trust = {}, blocked = {};
   for (const b of Object.keys(chars)) {
     trust[b] = await getTrust(b);
@@ -19,7 +20,7 @@ async function state() {
   const botChats = {};
   for (const b of Object.keys(chars)) botChats[b] = (await r('SMEMBERS', `g:cb:${b}`)) || [];
   return {
-    stage, trust, blocked, given, flags, main, guests, outbox: outN, bots: toObj(botsRaw), chats, botChats,
+    stage, trust, blocked, given, flags, main, guests, outbox: outN, bots: toObj(botsRaw), chats, botChats, cfg, env: { llm_order: process.env.LLM_ORDER || '', groq_model: process.env.GROQ_MODEL || '' },
     leaks: (leaks || []).map((x) => JSON.parse(x)),
     log: (logRaw || []).map((x) => JSON.parse(x)),
   };
@@ -40,6 +41,7 @@ export default async function handler(req, res) {
       if (op === 'forget') { await r('HDEL', 'g:chats', b.chat); for (const k of Object.keys(chars)) await r('SREM', `g:cb:${k}`, b.chat); }
       if (op === 'guests') await r('SET', 'g:chat:guests', b.chat);
       if (op === 'reset') await resetGame();
+      if (op === 'cfg') { for (const k of ['llm_order', 'groq_model']) { if (b[k]) await r('HSET', 'g:cfg', k, String(b[k]).trim()); else await r('HDEL', 'g:cfg', k); } }
       if (op === 'phish') { await r('SET', 'g:phished', 1); await log('trap', 'panel', 'Нино попалась: данные в панели Гоши'); }
       if (op === 'say') {
         await tg(b.bot, 'sendMessage', { chat_id: b.chat, text: b.text });
@@ -83,6 +85,10 @@ small{color:#888}
 <div class="card"><h3>Чаты</h3><div id="chats"></div>
 <p><small>Добавь Алину в группу «Ищем Диму» и напиши там что угодно, группа появится здесь. Затем «Начать игру».</small></p>
 <button class="red" onclick="if(confirm('Сбросить игру? Этап, доверие, история, утечки удалятся.'))post('reset',{})">Сбросить игру</button></div>
+<div class="card"><h3>Модели</h3><small>Меняется без пересборки. Пусто: берется из Vercel.</small>
+<label><small>Порядок (gemini, groq, mistral, claude)</small><input id="c1" placeholder="groq"></label>
+<label><small>Модели Groq через запятую</small><input id="c2" placeholder="minimaxai/minimax-m2.7,qwen/qwen3.8-27b,openai/gpt-oss-120b"></label>
+<button onclick="post('cfg',{llm_order:c1.value,groq_model:c2.value})">Сохранить</button> <small id="cenv"></small></div>
 <div class="card"><h3>Написать от персонажа</h3>
 <select id="sb" onchange="fillChats()"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
 <button onclick="say()">Отправить</button></div>
@@ -113,5 +119,6 @@ async function load(){
 }
 function fillChats(){const sb=document.getElementById('sb'),sc=document.getElementById('sc');const cur=sc.value;const ids=(S.botChats[sb.value]||[]).map(String);const list=S.chats.filter(c=>ids.includes(String(c.id)));sc.innerHTML=list.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('')||'<option value="">нет чатов: игрок должен написать этому боту</option>';if(cur&&list.some(c=>String(c.id)===cur))sc.value=cur;}
 async function say(){const t=document.getElementById('stx');if(!t.value.trim()||!sc.value)return;await post('say',{bot:sb.value,chat:sc.value,text:t.value});t.value='';}
+let cfgInit=false;const _load=load;load=async function(){await _load();if(!cfgInit&&S.cfg){c1.value=S.cfg.llm_order||'';c2.value=S.cfg.groq_model||'';cfgInit=true;}document.getElementById('cenv').textContent='в Vercel: '+(S.env.llm_order||'-')+' / '+(S.env.groq_model||'-');};
 load();setInterval(()=>{fetch(api('tick')).then(load)},15000);
 </script></body></html>`;

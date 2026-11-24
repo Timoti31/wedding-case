@@ -253,7 +253,8 @@ export async function handleUpdate(bot, u) {
   if (!ch.delayMin) await tg(bot, 'sendChatAction', { chat_id: chat.id, action: 'typing' }).catch(() => {});
   let out;
   try {
-    out = await complete(system, history, ch.tier);
+    const cfg = toObj(await r('HGETALL', 'g:cfg'));
+    out = await complete(system, history, ch.tier, cfg);
   } catch (e) {
     await log('error', bot, e.message);
     return;
