@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       if (op === 'start') await startGame(b.chat);
       if (op === 'guests') await r('SET', 'g:chat:guests', b.chat);
       if (op === 'reset') await resetGame();
+      if (op === 'phish') { await r('SET', 'g:phished', 1); await log('trap', 'panel', 'Нино попалась: данные в панели Гоши'); }
       if (op === 'say') {
         await tg(b.bot, 'sendMessage', { chat_id: b.chat, text: b.text });
         await log('say', b.bot, `ведущий -> ${b.chat}: ${b.text}`);
@@ -80,6 +81,7 @@ small{color:#888}
 <div class="card"><h3>Написать от персонажа</h3>
 <select id="sb"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
 <button onclick="say()">Отправить</button></div>
+<div class="card"><h3>Ловушка Гоши</h3><p><small>Пока бота Нино нет: если игроки отправили ей убедительное письмо со ссылкой, нажми кнопку, и данные появятся в панели Гоши.</small></p><button onclick="post('phish',{})">Нино попалась</button></div>
 <div class="card"><h3>Выдано и утечки</h3><div id="given"></div></div>
 <div class="card" style="grid-column:1/-1"><h3>Журнал</h3><div id="log"></div></div>
 </main>
@@ -88,7 +90,7 @@ const K=new URLSearchParams(location.search).get('key');
 const api=(op)=>'/api/admin?key='+encodeURIComponent(K)+'&op='+op;
 async function post(op,b){const r=await fetch(api(op),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json();if(j.error)alert(j.error);load();}
 function esc(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-const NAMES={alina:'Алина',viktor:'Виктор',kostya:'Костя'};
+const NAMES={alina:'Алина',viktor:'Виктор',kostya:'Костя',gosha:'Гоша',lera:'Лера',panel:'Ведущий'};
 let S;
 async function load(){
  const r=await fetch(api('state'));S=await r.json();

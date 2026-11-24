@@ -111,6 +111,10 @@ async function onStage(s) {
     for (const p of await players('viktor'))
       await schedule(6 * 60000, { bot: 'viktor', chat: p, parts: ['Буду краток.', 'Кто первым сообщит мне, где Дмитрий, получит 5000 долларов. Без вопросов.'] });
   }
+  if (s === 3) {
+    for (const p of await players('gosha'))
+      await schedule(2 * 60000, { bot: 'gosha', chat: p, parts: ['йо, Костя сказал вы там до агентства докопались', 'если нужно будет что-то вскрыть, пишите'] });
+  }
   if (s === 5) {
     for (const p of await players('kostya'))
       await schedule(4 * 60000, { bot: 'kostya', chat: p, parts: ['ребят', 'мне только что с незнакомого номера пришло. пересылаю'], items: ['gergeti'] });
@@ -194,7 +198,7 @@ export async function handleUpdate(bot, u) {
   const [stage, trust, histRaw, given] = await Promise.all([
     getStage(), getTrust(bot), r('LRANGE', hKey, 0, -1), r('SMEMBERS', 'g:given'),
   ]);
-  const ctx = { given: (given || []).filter((k) => items[k]?.by === bot), usernames: names };
+  const ctx = { given: (given || []).filter((k) => items[k]?.by === bot), usernames: names, base: BASE() };
   if (bot === 'viktor') {
     const all = (await r('LRANGE', 'g:leaks', 0, -1)) || [];
     ctx.leaks = all.map((x) => JSON.parse(x)).filter((x) => Date.now() - x.t >= LEAK_DELAY_MS).map((x) => x.text).slice(-15);
@@ -221,10 +225,16 @@ export async function handleUpdate(bot, u) {
   let newStage = null;
   for (const t of tags) {
     if (t.k === 'trust') {
-      const d = Math.max(-3, Math.min(2, parseInt(t.v, 10) || 0));
-      if (!d) continue;
-      const v = await setTrust(bot, (await getTrust(bot)) + d);
-      await log('trust', bot, `${d > 0 ? '+' : ''}${d} = ${v}`);
+      let v;
+      if (t.v.startsWith('=')) {
+        v = await setTrust(bot, parseInt(t.v.slice(1), 10) || 0);
+        await log('trust', bot, `= ${v}`);
+      } else {
+        const d = Math.max(-3, Math.min(2, parseInt(t.v, 10) || 0));
+        if (!d) continue;
+        v = await setTrust(bot, (await getTrust(bot)) + d);
+        await log('trust', bot, `${d > 0 ? '+' : ''}${d} = ${v}`);
+      }
       if (v === 0) {
         await r('SET', `g:block:${bot}`, 1, 'EX', 1200);
         await setTrust(bot, 2);

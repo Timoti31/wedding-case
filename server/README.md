@@ -5,7 +5,7 @@
 ## Переменные окружения
 | Имя | Что это |
 |---|---|
-| TG_ALINA, TG_VIKTOR, TG_KOSTYA | токены ботов из BotFather |
+| TG_ALINA, TG_VIKTOR, TG_KOSTYA, TG_GOSHA, TG_LERA | токены ботов из BotFather |
 | GEMINI_API_KEY | ключ Google AI Studio |
 | GROQ_API_KEY | ключ Groq (запасной мозг) |
 | UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN | база Upstash |
