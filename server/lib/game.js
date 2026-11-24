@@ -53,7 +53,16 @@ async function sendItem(bot, chatId, key) {
   const it = items[key];
   if (!it) return;
   if (it.before) await sendParts(bot, chatId, [it.before]);
-  const url = BASE() + it.url;
+  const full = (u) => (u.startsWith('http') ? u : BASE() + u);
+  const url = full(it.url);
+  if (it.type === 'link2') {
+    await tg(bot, 'sendMessage', { chat_id: chatId, text: url });
+    if (it.mid) await sendParts(bot, chatId, [it.mid]);
+    await tg(bot, 'sendMessage', { chat_id: chatId, text: full(it.url2) });
+    await r('SADD', 'g:given', key);
+    await log('give', bot, `${key} -> ${chatId}`);
+    return;
+  }
   if (it.type === 'voice') await tg(bot, 'sendVoice', { chat_id: chatId, voice: url });
   else if (it.type === 'link') await tg(bot, 'sendMessage', { chat_id: chatId, text: url });
   else await tg(bot, 'sendPhoto', { chat_id: chatId, photo: url, caption: it.caption || '' });
@@ -243,7 +252,7 @@ export async function handleUpdate(bot, u) {
   const [phished, ninoAlert, phishFails, ninoLock, dimaOpen] = await r('MGET', 'g:phished', 'g:nino_alert', 'g:phish_fail', 'g:nino_lock', 'g:dima_open');
   const confessed = await r('GET', 'g:confessed');
   const flags = { confessed: !!confessed, phished: !!phished, ninoAlert: !!ninoAlert, phishFails: Number(phishFails || 0), ninoLock: !!ninoLock, dimaOpen: !!dimaOpen, hasTrap: text.includes(TRAP) };
-  const ctx = { given: (given || []).filter((k) => items[k]?.by === bot), usernames: names, base: BASE(), flags };
+  const ctx = { given: (given || []).filter((k) => items[k]?.by === bot && !items[k]?.repeat), usernames: names, base: BASE(), flags };
   if (bot === 'viktor') {
     const all = (await r('LRANGE', 'g:leaks', 0, -1)) || [];
     ctx.leaks = all.map((x) => JSON.parse(x)).filter((x) => Date.now() - x.t >= LEAK_DELAY_MS).map((x) => x.text).slice(-15);
@@ -298,7 +307,7 @@ export async function handleUpdate(bot, u) {
       if (ch.canStage.includes(n) && n === stage + 1) newStage = n;
     } else if (t.k === 'give') {
       const it = items[t.v];
-      if (it && it.by === bot && stage >= it.minStage && !(given || []).includes(t.v) && !toSend.includes(t.v)) toSend.push(t.v);
+      if (it && it.by === bot && stage >= it.minStage && (it.repeat || !(given || []).includes(t.v)) && !toSend.includes(t.v)) toSend.push(t.v);
     } else if (t.k === 'confess' && bot === 'alina' && stage >= 5 && !flags.confessed) {
       await r('SET', 'g:confessed', 1);
       await r('SADD', 'g:flags', 'Алина: полное признание');
