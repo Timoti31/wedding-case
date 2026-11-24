@@ -160,6 +160,18 @@ async function rememberChat(bot, c) {
   await r('SADD', `g:cb:${bot}`, c.id);
 }
 
+const GELA_PHONE = /\+?995\s?555\s?01\s?47\s?22/;
+function sanitize(text, names) {
+  const known = new Set(Object.values(names).map((x) => x.toLowerCase()));
+  text = text.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => (names[k] ? '@' + names[k] : '{{BAD}}'));
+  return text.split('\n').filter((line) => {
+    if (line.includes('{{BAD}}')) return false;
+    for (const m of line.matchAll(/@([A-Za-z0-9_]{3,})/g)) if (!known.has(m[1].toLowerCase())) return false;
+    for (const m of line.matchAll(/\+?\d[\d\s()-]{7,}\d/g)) if (!GELA_PHONE.test(m[0])) return false;
+    return true;
+  }).join('\n');
+}
+
 function parse(out) {
   const tags = [];
   let text = out.replace(/\[\[\s*(\w+)\s*(?::([^\]]*))?\]\]/g, (_, k, v) => {
@@ -247,7 +259,7 @@ export async function handleUpdate(bot, u) {
     return;
   }
   if (out.errors?.length) await log('warn', bot, 'запасная модель, причина: ' + out.errors.join(' | ').slice(0, 300));
-  const { parts, tags } = parse(out.text);
+  const { parts, tags } = parse(sanitize(out.text, names, bot));
   await log('out', bot, `(${out.provider}) ${parts.join(' / ')}${tags.length ? '  ' + tags.map((t) => `[${t.k}:${t.v}]`).join(' ') : ''}`);
   if (parts.length) {
     await r('RPUSH', hKey, JSON.stringify({ role: 'assistant', content: parts.join('\n\n') }));
