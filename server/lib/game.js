@@ -187,7 +187,8 @@ function parse(out) {
     tags.push({ k: k.toLowerCase(), v: (v || '').trim() });
     return '';
   });
-  text = text.replace(/[—–]/g, '-').trim();
+  text = text.replace(/[—–]/g, '-');
+  text = text.split('\n').filter((l) => !/^\s*[\[(*][^\]\)]*(пересыла|отправля|присыла|голосов|фото|скрин|ссылк)[^\]\)]*[\])*]\s*$/i.test(l)).join('\n').trim();
   const parts = text.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean).slice(0, 4);
   return { parts, tags };
 }
@@ -338,6 +339,15 @@ export async function handleUpdate(bot, u) {
       await r('SET', `g:block:${bot}`, 1, 'EX', 6 * 3600);
       await log('flag', bot, 'игроки назвались людьми Алины/Виктора: Зураб закрылся, Дима предупрежден');
     }
+  }
+  if (!newStage) {
+    const t = text.toLowerCase();
+    const has = (...res) => res.every((re) => re.test(t));
+    if (bot === 'alina' && stage === 1 && has(/19[:.]?40|офис/, /supra|супра|агентств/)) newStage = 2;
+    if (bot === 'alina' && stage === 2 && has(/180/, /сч[её]т|свадьб|фиктив/)) newStage = 3;
+    if (bot === 'alina' && stage === 3 && has(/гел/, /пап|отц|отец|виктор|миронов/)) newStage = 4;
+    if (bot === 'kostya' && stage === 4 && has(/алин/, /нельзя|сдала|рассказала|слила|сливает|предала|на отца|на папу|врет|врёт/)) newStage = 5;
+    if (newStage) await log('stage', bot, `ключевые слова в сообщении игрока: переход на ${newStage}`);
   }
   if (bot === 'kostya' && newStage === 5) {
     await setTrust('kostya', 9);
