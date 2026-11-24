@@ -241,7 +241,8 @@ export async function handleUpdate(bot, u) {
     getStage(), getTrust(bot), r('LRANGE', hKey, 0, -1), r('SMEMBERS', 'g:given'),
   ]);
   const [phished, ninoAlert, phishFails, ninoLock, dimaOpen] = await r('MGET', 'g:phished', 'g:nino_alert', 'g:phish_fail', 'g:nino_lock', 'g:dima_open');
-  const flags = { phished: !!phished, ninoAlert: !!ninoAlert, phishFails: Number(phishFails || 0), ninoLock: !!ninoLock, dimaOpen: !!dimaOpen, hasTrap: text.includes(TRAP) };
+  const confessed = await r('GET', 'g:confessed');
+  const flags = { confessed: !!confessed, phished: !!phished, ninoAlert: !!ninoAlert, phishFails: Number(phishFails || 0), ninoLock: !!ninoLock, dimaOpen: !!dimaOpen, hasTrap: text.includes(TRAP) };
   const ctx = { given: (given || []).filter((k) => items[k]?.by === bot), usernames: names, base: BASE(), flags };
   if (bot === 'viktor') {
     const all = (await r('LRANGE', 'g:leaks', 0, -1)) || [];
@@ -269,6 +270,7 @@ export async function handleUpdate(bot, u) {
 
   const toSend = [];
   let newStage = null;
+  let confession = false;
   for (const t of tags) {
     if (t.k === 'trust') {
       let v;
@@ -297,6 +299,11 @@ export async function handleUpdate(bot, u) {
     } else if (t.k === 'give') {
       const it = items[t.v];
       if (it && it.by === bot && stage >= it.minStage && !(given || []).includes(t.v) && !toSend.includes(t.v)) toSend.push(t.v);
+    } else if (t.k === 'confess' && bot === 'alina' && stage >= 5 && !flags.confessed) {
+      await r('SET', 'g:confessed', 1);
+      await r('SADD', 'g:flags', 'Алина: полное признание');
+      await log('flag', bot, 'Алина призналась');
+      confession = true;
     } else if (t.k === 'alert' && bot === 'nino') {
       await r('SET', 'g:nino_alert', 1);
       await log('flag', bot, 'Нино настороже');
@@ -335,6 +342,18 @@ export async function handleUpdate(bot, u) {
   } else {
     await sendParts(bot, chat.id, parts);
     for (const k of toSend) await sendItem(bot, chat.id, k);
+  }
+  if (confession) {
+    const script = [
+      'да. это я',
+      'дима рассказал мне все 11го вечером. я попросила его молчать до свадьбы',
+      'а ночью испугалась. в 00:50 позвонила папе и написала «пап, он все знает»',
+      'я думала он просто поговорит с ним. папа сказал «найди его, я с ним поговорю, и свадьбу перенесем». и я ему поверила',
+      'простите меня 😭 я не хотела чтобы так',
+    ];
+    await sendParts('alina', chat.id, script);
+    await sendItem('alina', chat.id, 'viktor_voice');
+    await r('RPUSH', hKey, JSON.stringify({ role: 'assistant', content: script.join('\n\n') + '\n\n[отправила голосовое папы от 12 ноября]' }));
   }
   if (newStage) await setStage(newStage, bot);
 }
