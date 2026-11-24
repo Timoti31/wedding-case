@@ -123,22 +123,32 @@ async function onStage(s) {
 }
 
 export async function startGame(chatId) {
+  const step = async (name, fn) => {
+    try { await fn(); } catch (e) { await log('error', 'alina', `старт, ${name}: ${e.message}`); throw new Error(`${name}: ${e.message}`); }
+  };
+  const intro1 = ['ребят привет', 'простите что вот так всех добавила, я просто не знаю к кому еще'];
+  const intro2 = [
+    'дима пропал. с утра 13го телефон выключен, свадьбу отменили',
+    'вот скрины из чата гостей, там все как было. вас туда добавить не могу, там папа админ и он против',
+  ];
+  const intro3 = [
+    `и наш сайт, там все про свадьбу и гостей ${SITE}`,
+    'если что-то найдете пишите мне сюда через @, я все время на связи',
+  ];
+  await step('приветствие', () => sendParts('alina', chatId, intro1));
   await r('SET', 'g:chat:main', chatId);
   await r('SET', 'g:stage', 1);
   await r('SET', 'g:started', Date.now());
   await log('stage', 'panel', 'игра началась');
-  await sendParts('alina', chatId, ['ребят привет', 'простите что вот так всех добавила, я просто не знаю к кому еще']);
-  await sendItem('alina', chatId, 'alina_start');
-  await sendParts('alina', chatId, [
-    'дима пропал. с утра 13го телефон выключен, свадьбу отменили',
-    'вот скрины из чата гостей, там все как было. вас туда добавить не могу, там папа админ и он против',
-  ]);
+  try { await sendItem('alina', chatId, 'alina_start'); } catch (e) { await log('error', 'alina', 'старт, голосовое: ' + e.message); }
+  await step('текст', () => sendParts('alina', chatId, intro2));
   const gc = ['467e1113118e', '67e51f8307d5', '16205cc47afb', '058737818ad5', 'a088ea8ad45d'];
-  await tg('alina', 'sendMediaGroup', { chat_id: chatId, media: gc.map((n) => ({ type: 'photo', media: `${BASE()}/m/${n}.jpg` })) });
-  await sendParts('alina', chatId, [
-    `и наш сайт, там все про свадьбу и гостей ${SITE}`,
-    'если что-то найдете пишите мне сюда через @, я все время на связи',
-  ]);
+  try {
+    await tg('alina', 'sendMediaGroup', { chat_id: chatId, media: gc.map((n) => ({ type: 'photo', media: `${BASE()}/m/${n}.jpg` })) });
+  } catch (e) { await log('error', 'alina', 'старт, скрины: ' + e.message); }
+  await step('сайт', () => sendParts('alina', chatId, intro3));
+  const hKey = `g:h:alina:${chatId}`;
+  await r('RPUSH', hKey, JSON.stringify({ role: 'assistant', content: [...intro1, '[голосовое: Алина плачет и просит помочь найти Диму]', ...intro2, '[5 скринов чата гостей]', ...intro3].join('\n\n') }));
 }
 
 // ---------- сообщения ----------
@@ -236,6 +246,7 @@ export async function handleUpdate(bot, u) {
     await log('error', bot, e.message);
     return;
   }
+  if (out.errors?.length) await log('warn', bot, 'запасная модель, причина: ' + out.errors.join(' | ').slice(0, 300));
   const { parts, tags } = parse(out.text);
   await log('out', bot, `(${out.provider}) ${parts.join(' / ')}${tags.length ? '  ' + tags.map((t) => `[${t.k}:${t.v}]`).join(' ') : ''}`);
   if (parts.length) {

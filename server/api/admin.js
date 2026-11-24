@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       if (op === 'trust') await setTrust(b.bot, Number(b.value));
       if (op === 'unblock') await r('DEL', `g:block:${b.bot}`);
       if (op === 'start') await startGame(b.chat);
+      if (op === 'forget') { await r('HDEL', 'g:chats', b.chat); for (const k of Object.keys(chars)) await r('SREM', `g:cb:${k}`, b.chat); }
       if (op === 'guests') await r('SET', 'g:chat:guests', b.chat);
       if (op === 'reset') await resetGame();
       if (op === 'phish') { await r('SET', 'g:phished', 1); await log('trap', 'panel', 'Нино попалась: данные в панели Гоши'); }
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
       return res.json({ ok: true });
     }
   } catch (e) {
+    await log('error', 'panel', `${op}: ${e.message}`).catch(() => {});
     return res.status(500).json({ error: e.message });
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -102,7 +104,7 @@ async function load(){
  document.getElementById('upd').textContent=new Date().toLocaleTimeString();
  document.getElementById('stages').innerHTML=[1,2,3,4,5].map(n=>'<button class="'+(n==S.stage?'on':'sec')+'" onclick="post(\\'stage\\',{stage:'+n+'})">'+n+'</button>').join('');
  document.getElementById('trust').innerHTML=Object.entries(S.trust).map(([b,v])=>'<tr><td>'+(NAMES[b]||b)+(S.bots[b]?' <small>@'+S.bots[b]+'</small>':'')+(S.blocked[b]?' <b style="color:#c92a2a">блок</b> <button class=sec onclick="post(\\'unblock\\',{bot:\\''+b+'\\'})">снять</button>':'')+'</td><td><input type=number min=0 max=10 value="'+v+'" style="width:60px" onchange="post(\\'trust\\',{bot:\\''+b+'\\',value:this.value})"></td></tr>').join('');
- document.getElementById('chats').innerHTML=S.chats.filter(c=>c.type!=='private').map(c=>'<div>'+esc(c.title||c.id)+' <small>'+c.type+'</small> '+(c.id==S.main?'<b>основной</b>':'<button onclick="if(confirm(\\'Начать игру в этом чате?\\'))post(\\'start\\',{chat:\\''+c.id+'\\'})">Начать игру</button>')+(c.id==S.guests?' <b>гости</b>':' <button class=sec onclick="post(\\'guests\\',{chat:\\''+c.id+'\\'})">это чат гостей</button>')+'</div>').join('')||'<small>пока нет</small>';
+ const alinaIn=(S.botChats.alina||[]).map(String);document.getElementById('chats').innerHTML=S.chats.filter(c=>c.type!=='private').map(c=>'<div style="margin:6px 0">'+esc(c.title||c.id)+' <small>'+c.type+(alinaIn.includes(String(c.id))?'':' · Алины тут нет')+'</small> <button class=sec onclick="if(confirm(\\'Убрать чат из списка?\\'))post(\\'forget\\',{chat:\\''+c.id+'\\'})">×</button> '+(c.id==S.main?'<b>основной</b>':'<button onclick="if(confirm(\\'Начать игру в этом чате?\\'))post(\\'start\\',{chat:\\''+c.id+'\\'})">Начать игру</button>')+(c.id==S.guests?' <b>гости</b>':' <button class=sec onclick="post(\\'guests\\',{chat:\\''+c.id+'\\'})">это чат гостей</button>')+'</div>').join('')||'<small>пока нет</small>';
  const sb=document.getElementById('sb'),sc=document.getElementById('sc');
  if(!sb.options.length){sb.innerHTML=Object.keys(S.trust).map(b=>'<option value="'+b+'">'+(NAMES[b]||b)+'</option>').join('');}
  fillChats();

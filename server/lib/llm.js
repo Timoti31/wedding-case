@@ -96,7 +96,8 @@ export async function complete(system, messages, tier = 'lite') {
   const errors = [];
   for (const p of order) {
     try {
-      return await providers[p](system, messages, tier);
+      const res = await providers[p](system, messages, tier);
+      return { ...res, errors };
     } catch (e) {
       errors.push(String(e.message || e));
     }
