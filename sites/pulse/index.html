@@ -22,6 +22,7 @@
   .head h1{font-size:20px}
   .head .nk{color:#888;font-size:14px}
   .head .bio{font-size:14px;color:#444;margin-top:6px;white-space:pre-line}
+  .msg{display:inline-block;margin-top:10px;padding:7px 22px;border-radius:8px;background:#efefef;color:#111;font-weight:600;font-size:14px;text-decoration:none}
   .stats{display:flex;gap:14px;font-size:14px;margin-top:8px;flex-wrap:wrap}
   .stories{display:flex;gap:12px;margin-bottom:18px;overflow-x:auto}
   .st{text-align:center;font-size:12px;cursor:pointer}
@@ -49,6 +50,7 @@
 <div class="top"><b onclick="go('')">Pulse</b><input id="q" placeholder="Поиск"></div>
 <div class="wrap" id="main"></div>
 <div class="sv" id="sv" onclick="this.style.display='none'"><div id="svb"></div></div>
+<script src="tg.js"></script>
 <script src="data.js"></script>
 <script>
 const D=window.PULSE;const ALL={};
@@ -83,7 +85,7 @@ function profile(nick){
   const p=ALL[nick];if(!p){main.innerHTML='<div class="empty">Аккаунт не найден</div>';return}
   main.innerHTML=`<span class="back" onclick="history.back()">← Назад</span>
   <div class="head">${p.ava?`<img class="ava ${p.stories?"":"nost"}" src="${p.ava}" ${p.stories?`onclick="story('${nick}',0)" style="cursor:pointer"`:""}>`:`<div class="ava ini" style="background:${col(p.nick)}">${p.name[0]}</div>`}
-  <div><h1>${p.name}</h1><div class="nk">@${p.nick}</div><div class="stats"><span><b>${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span>${p.fl?`<span><b>${p.fl}</b> подписок</span>`:""}</div>${p.bio?`<div class="bio">${p.bio}</div>`:""}</div></div>
+  <div><h1>${p.name}</h1><div class="nk">@${p.nick}</div><div class="stats"><span><b>${p.posts.length}</b> публ.</span><span><b>${p.f}</b> подписчиков</span>${p.fl?`<span><b>${p.fl}</b> подписок</span>`:""}</div>${p.bio?`<div class="bio">${p.bio}</div>`:""}${(window.PULSE_TG||{})[p.nick]?`<a class="msg" href="https://t.me/${PULSE_TG[p.nick]}" target="_blank" rel="noopener">Написать</a>`:""}</div></div>
   ${p.stories?`<div class="stories">${p.stories.map((s,i)=>`<div class="st" onclick="story('${nick}',${i})"><img src="${s.img||p.ava}"><div>${s.cap?s.cap.split(" ·")[0]:s.d}</div></div>`).join("")}</div>`:""}
   ${p.posts.length?p.posts.map(x=>postHTML(p,x,false)).join(""):'<div class="empty">Публикаций пока нет</div>'}`;
   scrollTo(0,0);
