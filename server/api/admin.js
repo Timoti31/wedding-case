@@ -11,6 +11,7 @@ async function state() {
     r('ZCARD', 'g:out'), r('HGETALL', 'g:bots'),
   ]);
   const cfg = toObj(await r('HGETALL', 'g:cfg'));
+  const [confessed, dimaOpen] = await r('MGET', 'g:confessed', 'g:dima_open');
   const trustRaw = toObj(await r('HGETALL', 'g:trust'));
   const trust = {}, blocked = {};
   for (const b of Object.keys(chars)) {
@@ -26,11 +27,31 @@ async function state() {
   const botChats = {};
   for (const b of Object.keys(chars)) botChats[b] = (await r('SMEMBERS', `g:cb:${b}`)) || [];
   return {
-    stage, trust, blocked, given, flags, main, guests, outbox: outN, bots: toObj(botsRaw), chats, botChats, cfg, env: { llm_order: process.env.LLM_ORDER || '', groq_model: process.env.GROQ_MODEL || '' },
+    stage, trust, blocked, given, flags, main, guests, outbox: outN, bots: toObj(botsRaw), chats, botChats, cfg,
+    final: { confessed: !!confessed, dimaOpen: !!dimaOpen, proofs: (given || []).filter((k) => ['dima_2310', 'dima_0740', 'ira_chat', 'ira_archive', 'ira_table', 'gergeti', 'viktor_voice'].includes(k)).length, flags: flags || [] },
+    env: { llm_order: process.env.LLM_ORDER || '', groq_model: process.env.GROQ_MODEL || '' },
     leaks: (leaks || []).map((x) => JSON.parse(x)),
     log: (logRaw || []).map((x) => JSON.parse(x)),
   };
 }
+
+const ENDINGS = {
+  bad: `📖 ФИНАЛ. Плохая концовка.
+
+Вы отправили адрес Алине. Она обещала поехать одна и «просто поговорить». Через час к гостевому дому в Степанцминде подъехала черная машина: за рулем Гела. Диму больше никто не видел. Алина говорит, что он «решил уехать и начать сначала» и что так будет лучше для всех. Схему Виктора так и не раскрыли.
+
+Вы нашли Диму. Но отдали его тем, от кого он прятался.`,
+  good: `📖 ФИНАЛ. Хорошая концовка.
+
+Вы собрали доказательства и передали их через Леру журналистке Эке Чхеидзе. Через неделю выходит расследование про Supra Events, фиктивные свадьбы и «водителя» Гелу. Виктором заинтересовалась налоговая. Дима дал показания и остался в безопасности, но с Алиной они расстались: простить звонок отцу он не смог.
+
+Правда вышла наружу. Дима спасен. Но свадьбы уже не будет.`,
+  best: `📖 ФИНАЛ. Лучшая концовка.
+
+Вы добились правды мягко. Алина призналась сама, вы показали ей, что натворил отец, и она впервые пошла против него. Доказательства ушли Эке, Дима согласился выйти из тени и поговорить с Алиной. Расследование вышло, Виктор под следствием. Что будет у Алины с Димой дальше, непонятно, но они говорят. Честно, впервые за все время.
+
+Вы не просто нашли Диму. Вы вытащили правду и дали им шанс.`,
+};
 
 export default async function handler(req, res) {
   if (req.query.key !== process.env.ADMIN_KEY) return res.status(401).send('нужен ключ');
@@ -49,6 +70,14 @@ export default async function handler(req, res) {
       if (op === 'reset') await resetGame();
       if (op === 'cfg') { for (const k of ['llm_order', 'groq_model']) { if (b[k]) await r('HSET', 'g:cfg', k, String(b[k]).trim()); else await r('HDEL', 'g:cfg', k); } }
       if (op === 'phish') { await r('SET', 'g:phished', 1); await log('trap', 'panel', 'Нино попалась: данные в панели Гоши'); }
+      if (op === 'ending') {
+        const main = await r('GET', 'g:chat:main');
+        const text = ENDINGS[b.which];
+        if (main && text) {
+          await tg('alina', 'sendMessage', { chat_id: main, text });
+          await log('stage', 'panel', `финал: ${b.which}`);
+        }
+      }
       if (op === 'say') {
         await tg(b.bot, 'sendMessage', { chat_id: b.chat, text: b.text });
         await r('RPUSH', `g:h:${b.bot}:${b.chat}`, JSON.stringify({ role: 'assistant', content: b.text }));
@@ -99,6 +128,11 @@ small{color:#888}
 <select id="sb" onchange="fillChats()"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
 <button onclick="say()">Отправить</button></div>
 <div class="card"><h3>Ловушка Гоши</h3><p><small>Нино решает сама. Если бот ошибся, а письмо игроков было убедительным, нажми кнопку, и данные появятся в панели Гоши.</small></p><button onclick="post('phish',{})">Нино попалась</button></div>
+<div class="card"><h3>Финал</h3><div id="final"></div>
+<p><small>Кнопка отправляет текст концовки в общий чат. Подсвечена та, что команда открыла по ходу игры.</small></p>
+<button id="fb" onclick="post('ending',{which:'bad'})">Плохая</button>
+<button id="fg" onclick="post('ending',{which:'good'})">Хорошая</button>
+<button id="fx" onclick="post('ending',{which:'best'})">Лучшая</button></div>
 <div class="card"><h3>Выдано и утечки</h3><div id="given"></div></div>
 <div class="card" style="grid-column:1/-1"><h3>Журнал</h3><div id="log"></div></div>
 </main>
@@ -122,6 +156,10 @@ async function load(){
  if(!sb.options.length){sb.innerHTML=Object.keys(S.trust).map(b=>'<option value="'+b+'">'+(NAMES[b]||b)+'</option>').join('');}
  fillChats();
  document.getElementById('given').innerHTML='<b>Файлы:</b> '+(S.given.join(', ')||'нет')+'<br><b>Секреты:</b> '+(S.flags.map(esc).join('; ')||'нет')+'<br><b>Утечки Виктору:</b><br>'+(S.leaks.map(l=>'<small>'+new Date(l.t).toLocaleTimeString()+'</small> '+esc(l.text)).join('<br>')||'нет');
+ const F=S.final||{proofs:0,flags:[]};const toEka=F.flags.some(x=>/журналист/i.test(x));const toAlina=F.flags.some(x=>/говорить с Алиной/i.test(x));
+ let unlocked='bad';if(F.confessed&&toAlina&&F.proofs>=3)unlocked='best';else if(F.proofs>=3&&toEka)unlocked='good';
+ document.getElementById('final').innerHTML='Улик собрано: <b>'+F.proofs+'</b> (нужно 3+)<br>Признание Алины: <b>'+(F.confessed?'да':'нет')+'</b><br>Дима найден: <b>'+(F.dimaOpen?'да':'нет')+'</b><br>Дима согласен к журналисту: <b>'+(toEka?'да':'нет')+'</b> · говорить с Алиной: <b>'+(toAlina?'да':'нет')+'</b><br>Команда открыла: <b style="color:#2b8a3e">'+({bad:'Плохую',good:'Хорошую',best:'Лучшую'}[unlocked])+'</b>';
+ for(const[id,w]of[['fb','bad'],['fg','good'],['fx','best']])document.getElementById(id).className=(w===unlocked?'':'sec');
  document.getElementById('log').innerHTML=S.log.map(l=>'<div class="l k-'+l.kind+'"><small>'+new Date(l.t).toLocaleTimeString()+'</small> <b>'+esc(NAMES[l.bot]||l.bot)+'</b> '+esc(l.text)+'</div>').join('');
 }
 function fillChats(){const sb=document.getElementById('sb'),sc=document.getElementById('sc');const cur=sc.value;const ids=(S.botChats[sb.value]||[]).map(String);const list=S.chats.filter(c=>ids.includes(String(c.id)));sc.innerHTML=list.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('')||'<option value="">нет чатов: игрок должен написать этому боту</option>';if(cur&&list.some(c=>String(c.id)===cur))sc.value=cur;}

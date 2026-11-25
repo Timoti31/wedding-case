@@ -94,6 +94,7 @@ export async function tick() {
       await log('error', job.bot, 'outbox: ' + e.message);
     }
   }
+  try { await maybeHint(); } catch (e) { await log('error', 'alina', 'подсказка: ' + e.message); }
   return sent;
 }
 
@@ -101,8 +102,30 @@ export async function tick() {
 export async function setStage(n, who = 'panel') {
   const cur = await getStage();
   await r('SET', 'g:stage', n);
+  await r('SET', 'g:stage_since', Date.now());
   await log('stage', who, `этап ${cur} -> ${n}`);
   if (n > cur) for (let s = cur + 1; s <= n; s++) await onStage(s);
+}
+
+// Подсказки, если команда застряла на этапе. Текст идет в общий чат от Алины.
+const HINTS = {
+  1: ['ребят а может кто знает где дима был вечером 12го? напишите его другу косте, они близкие', 'и лере напишите, вдруг она что-то слышала'],
+  2: ['костя говорил дима всю неделю сидел над какими-то файлами по работе', 'гоша в этом шарит, может глянуть его облако. спросите костю его контакт'],
+  3: ['если это правда связано с агентством, надо попасть в переписку нино', 'гоша знает как. и посмотрите кто вообще стоит за supra events'],
+  4: ['я не понимаю кто мог сказать про диму... кто вообще знал?', 'может тетя тамара что-то видела, она у меня ночевала тогда'],
+  5: ['костя писал что ему что-то пришло с незнакомого номера, спросите у него', 'он где-то прячется, надо понять где по фото'],
+};
+
+export async function maybeHint() {
+  const stage = await getStage();
+  const main = await r('GET', 'g:chat:main');
+  if (!main || !HINTS[stage]) return;
+  const since = Number(await r('GET', 'g:stage_since') || 0);
+  const mins = Number(process.env.HINT_DELAY_MIN || 20) * Number(process.env.DELAY_FACTOR || 1);
+  if (!since || Date.now() - since < mins * 60000) return;
+  if (!(await r('SET', `g:hint:${stage}`, 1, 'NX'))) return;
+  await sendParts('alina', main, HINTS[stage]);
+  await log('stage', 'alina', `подсказка на этапе ${stage}`);
 }
 
 async function players(bot) {
@@ -147,9 +170,16 @@ export async function startGame(chatId) {
     `и наш сайт, там все про свадьбу и гостей ${SITE}`,
     'если что-то найдете пишите мне сюда через @, я все время на связи',
   ];
+  const memo = [
+    '📋 Как играть (это подсказка от ведущего, не из сюжета):',
+    '• Пишите персонажам в личку, а Алине сюда через @alina_mironova_bot.\n• Каждый из вас общается с героями сам за себя: доверие у всех свое.\n• Контакты новых людей вам будут давать сами герои, просто спрашивайте.\n• Все имена, сайты и номера в игре вымышлены. Не звоните по номерам из игры и не ищите этих людей вне игры.\n• Если застрянете, подождите: кто-нибудь подскажет.',
+    'Удачи. Поехали 👇',
+  ];
+  try { await sendParts('alina', chatId, memo, { typing: false }); } catch (e) { await log('error', 'alina', 'старт, памятка: ' + e.message); }
   await step('приветствие', () => sendParts('alina', chatId, intro1));
   await r('SET', 'g:chat:main', chatId);
   await r('SET', 'g:stage', 1);
+  await r('SET', 'g:stage_since', Date.now());
   await r('SET', 'g:started', Date.now());
   await log('stage', 'panel', 'игра началась');
   try { await sendItem('alina', chatId, 'alina_start'); } catch (e) { await log('error', 'alina', 'старт, голосовое: ' + e.message); }
