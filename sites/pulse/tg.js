@@ -4,6 +4,6 @@ window.PULSE_TG = {
   "kostya.orlov": "kostya_orlov_bot",
   "lera.gusseva": "lera_guseva_bot",
   "g0sha": "g0shaIT_bot",
-  "supra.nino": "",
-  "tamara.g": ""
+  "supra.nino": "supra_nino_bot",
+  "tamara.g": "tamara_g_bot"
 };
