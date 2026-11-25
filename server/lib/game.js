@@ -2,7 +2,7 @@
 import { r, getJ, setJ } from './redis.js';
 import { tg, sleep } from './tg.js';
 import { complete } from './llm.js';
-import { chars, items, SITE, TRAP } from './characters.js';
+import { chars, items, SITE, TRAP, CONTACTS } from './characters.js';
 
 export const BASE = () => process.env.PUBLIC_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`;
 const LEAK_DELAY_MS = Number(process.env.LEAK_DELAY_MIN || 20) * 60000;
@@ -274,14 +274,45 @@ export async function handleUpdate(bot, u) {
   if (out.errors?.length) await log('warn', bot, 'запасная модель, причина: ' + out.errors.join(' | ').slice(0, 300));
   const { parts, tags } = parse(sanitize(out.text, names, bot));
   await log('out', bot, `(${out.provider}) ${parts.join(' / ')}${tags.length ? '  ' + tags.map((t) => `[${t.k}:${t.v}]`).join(' ') : ''}`);
-  if (parts.length) {
-    await r('RPUSH', hKey, JSON.stringify({ role: 'assistant', content: parts.join('\n\n') }));
-    await r('LTRIM', hKey, -40, -1);
-  }
 
   const toSend = [];
   let newStage = null;
   let confession = false;
+  const low = text.toLowerCase();
+  // Зураб: тревогу поднимает только явное «мы от Алины / Виктора», код проверяет сервер
+  if (bot === 'zurab') {
+    const fromEnemy = /(мы|я)\s+(от|из)\s+(алин|виктор|миронов|отца|папы)/.test(low) || /(алина|виктор)\s+(нас\s+)?(прислал|послал)/.test(low);
+    for (let i = tags.length - 1; i >= 0; i--) if (tags[i].k === 'alarm' && !fromEnemy) tags.splice(i, 1);
+    if (fromEnemy && !tags.some((t) => t.k === 'alarm')) tags.push({ k: 'alarm', v: '' });
+    if (stage >= 5 && /белы[йм]\s+медвед/.test(low) && !fromEnemy && !flags.dimaOpen) {
+      if (!tags.some((t) => t.k === 'bear')) tags.push({ k: 'bear', v: '' });
+      parts.splice(0, parts.length, 'подождите');
+    }
+  }
+  // Алина: признание по ключевым словам, если модель не поставила метку
+  if (bot === 'alina' && stage >= 5 && !flags.confessed && !tags.some((t) => t.k === 'confess')
+      && /00[:.]?5[02]|он вс[её] знает/.test(low) && /тамар/.test(low) && !/(сука|тварь|дура|врешь|врёшь|хватит врать)/.test(low)) {
+    tags.push({ k: 'confess', v: '' });
+  }
+  if (bot === 'alina' && tags.some((t) => t.k === 'confess') && !flags.confessed) parts.splice(0, parts.length, 'я... подождите');
+  // Костя: на 4 этапе путает голосовые, второе голосовое = переход на 5
+  if (bot === 'kostya' && stage === 4 && tags.some((t) => t.k === 'give' && t.v === 'dima_2310') && (given || []).includes('dima_2310')) {
+    tags.push({ k: 'stage', v: '5' });
+  }
+  // Контакты: если просили, сервер сам добавляет ники из списка персонажа
+  if (CONTACTS[bot] && /(контакт|юзер|ник|@|телеграм|связаться)/.test(low)) {
+    const have = Object.entries(CONTACTS[bot]).filter(([k]) => names[k]);
+    const shown = parts.join(' ');
+    const missing = have.filter(([k]) => !shown.includes('@' + names[k]));
+    if (missing.length && missing.length === have.length) {
+      for (let i = parts.length - 1; i >= 0; i--) if (!/@\w/.test(parts[i]) && /(ник|@|контакт|знаю)/i.test(parts[i]) && parts.length > 1) parts.splice(i, 1);
+      parts.push(missing.map(([k, d]) => `${d.split(' (')[0].split(',')[0]}: @${names[k]}`).join('\n'));
+    }
+  }
+  if (parts.length) {
+    await r('RPUSH', hKey, JSON.stringify({ role: 'assistant', content: parts.join('\n\n') }));
+    await r('LTRIM', hKey, -40, -1);
+  }
   for (const t of tags) {
     if (t.k === 'trust') {
       let v;
