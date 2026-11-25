@@ -296,9 +296,16 @@ export async function handleUpdate(bot, u) {
 
   if (!ch.delayMin) await tg(bot, 'sendChatAction', { chat_id: chat.id, action: 'typing' }).catch(() => {});
   let out;
+  const hasCJK = (s) => /[぀-ヿ㐀-䶿一-鿿가-힯]/.test(s || '');
   try {
     const cfg = toObj(await r('HGETALL', 'g:cfg'));
     out = await complete(system, history, ch.tier, cfg);
+    if (hasCJK(out.text)) {
+      await log('warn', bot, 'иероглифы в ответе, перегенерация');
+      const retry = await complete(system + '\n\nВАЖНО: пиши ТОЛЬКО кириллицей на русском. Никаких иероглифов и других алфавитов.', history, ch.tier, cfg);
+      if (!hasCJK(retry.text)) out = retry;
+      else out = { ...retry, text: retry.text.replace(/[぀-ヿ㐀-䶿一-鿿가-힯]+/g, '').replace(/[ \t]{2,}/g, ' ') };
+    }
   } catch (e) {
     await log('error', bot, e.message);
     return;
