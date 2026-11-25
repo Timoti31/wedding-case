@@ -299,6 +299,17 @@ export async function handleUpdate(bot, u) {
   if (bot === 'kostya' && stage === 4 && tags.some((t) => t.k === 'give' && t.v === 'dima_2310') && (given || []).includes('dima_2310')) {
     tags.push({ k: 'stage', v: '5' });
   }
+  // Нино: фишинг засчитывает сервер, если прислали ссылку-ловушку с конкретными деталями
+  if (bot === 'nino' && stage >= 3 && flags.hasTrap && !flags.phished && !flags.ninoLock) {
+    const hasDetail = /\d{1,2}[.\s/-]\d{1,2}|\d{3}|лар|180|марани|алин|миронов|депозит|возврат|выплат|реквизит/.test(low);
+    const naive = /(я |мы )?(друг|подруг|от|знаком)\w*\s+(алин|димы|димин)/.test(low) && !/страхов|банк|винодельн|компани|юрист|нотариус|налог/.test(low);
+    if (hasDetail && !naive) {
+      tags.push({ k: 'phished', v: '' });
+      parts.splice(0, parts.length, 'секунду, открываю 📄', 'ой, какой-то белый экран. ну ладно, потом гляну 🤔');
+    } else if (!tags.some((t) => t.k === 'phished')) {
+      tags.push({ k: 'phish_fail', v: '' });
+    }
+  }
   // Контакты: если просили, сервер сам добавляет ники из списка персонажа
   if (CONTACTS[bot] && /(контакт|юзер|ник|@|телеграм|связаться)/.test(low)) {
     const have = Object.entries(CONTACTS[bot]).filter(([k]) => names[k]);
