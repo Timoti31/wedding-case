@@ -110,6 +110,8 @@ async function players(bot) {
 }
 
 async function onStage(s) {
+  // Автособытия этапа срабатывают один раз за игру, даже если этап переключали туда-сюда
+  if (!(await r('SET', `g:onstage:${s}`, 1, 'NX'))) return;
   const main = await r('GET', 'g:chat:main');
   const guests = await r('GET', 'g:chat:guests');
   if (s === 2) {
