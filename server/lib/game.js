@@ -203,6 +203,7 @@ async function rememberChat(bot, c) {
 }
 
 const GELA_PHONE = /\+?995\s?555\s?01\s?47\s?22/;
+const ALLOWED_HOSTS = ['alina-i-dima', 'supra-events', 'marani-signagi', 'skybox-cloud', 'kvalimail', 'g0sha-tools', 'pulse-social', 'companyinfo-ge', 'mironov-group', 'northbridge-audit', 'tbilisi-svoi', 'mtstay', 'wedding-case-engine', 'weatherapi.com'];
 function sanitize(text, names) {
   const known = new Set(Object.values(names).map((x) => x.toLowerCase()));
   text = text.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => (names[k] ? '@' + names[k] : '{{BAD}}'));
@@ -210,6 +211,10 @@ function sanitize(text, names) {
     if (line.includes('{{BAD}}')) return false;
     for (const m of line.matchAll(/@([A-Za-z0-9_]{3,})/g)) if (!known.has(m[1].toLowerCase())) return false;
     for (const m of line.matchAll(/\+?\d[\d\s()-]{7,}\d/g)) if (!GELA_PHONE.test(m[0])) return false;
+    for (const m of line.matchAll(/https?:\/\/([^\s/]+)|\b([a-z0-9-]+\.(?:vercel\.app|app|com|ge|ru|net|io))\b/gi)) {
+      const host = (m[1] || m[2] || '').toLowerCase();
+      if (!ALLOWED_HOSTS.some((h) => host.includes(h))) return false;
+    }
     return true;
   }).join('\n');
 }
