@@ -2,7 +2,7 @@
 import { r, getJ, setJ } from './redis.js';
 import { tg, sleep } from './tg.js';
 import { complete } from './llm.js';
-import { chars, items, SITE, TRAP, CONTACTS } from './characters.js';
+import { chars, items, SITE, TRAP, TRAP_PANEL, CONTACTS } from './characters.js';
 
 export const BASE = () => process.env.PUBLIC_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`;
 const LEAK_DELAY_MS = Number(process.env.LEAK_DELAY_MIN || 20) * 60000;
@@ -347,6 +347,21 @@ export async function handleUpdate(bot, u) {
   if (bot === 'ira' && trust <= 2 && /lebeda\s*35|лебеда\s*35|форум|тбилиси для своих/.test(low)
       && !tags.some((t) => t.k === 'trust')) {
     tags.push({ k: 'trust', v: '=3' });
+  }
+  // Гоша: игроки дают повод для письма -> Гоша сам подделывает фишинг, пароль падает в его панель
+  if (bot === 'gosha' && stage >= 3 && !flags.phished && !flags.ninoLock) {
+    const pretext = low.length > 40
+      && /страхов|банк|винодельн|марани|депозит|возврат|сч[её]т|акт|реквизит|клиент|свадьб|консультац|лари|сумм|180|подряд|налог|документ|поставщик/.test(low)
+      && !/^как\b|^а как|дай ссылк|что писать|какой повод|как попаст/.test(low);
+    if (pretext && !(await r('GET', 'g:nino_pretext'))) {
+      await r('SET', 'g:nino_pretext', 1, 'EX', 7200);
+      await r('SET', 'g:phished', 1);
+      await r('LPUSH', 'g:trap', JSON.stringify({ t: Date.now(), kind: 'login', login: 'nino.k@supra-events.ge' }));
+      await log('trap', 'gosha', 'игроки дали повод, Нино попалась (через Гошу)');
+      parts.splice(0, parts.length, 'о, это убедительно. подделываю письмо и отправляю ей от этого отправителя', 'минуту...');
+      const ms = 60000 * Number(process.env.DELAY_FACTOR || 1);
+      await schedule(ms, { bot: 'gosha', chat: chat.id, parts: ['все, она открыла письмо и ввела пароль 😏', 'логин и пароль у меня в панели: ' + BASE() + TRAP_PANEL] });
+    }
   }
   // Нино: фишинг засчитывает сервер, если прислали ссылку-ловушку с конкретными деталями
   if (bot === 'nino' && stage >= 3 && flags.hasTrap && !flags.phished && !flags.ninoLock) {
