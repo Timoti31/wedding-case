@@ -299,6 +299,11 @@ export async function handleUpdate(bot, u) {
   if (bot === 'kostya' && stage === 4 && tags.some((t) => t.k === 'give' && t.v === 'dima_2310') && (given || []).includes('dima_2310')) {
     tags.push({ k: 'stage', v: '5' });
   }
+  // Ира: упоминание ее форумного ника или форума само снимает отпирательство
+  if (bot === 'ira' && trust <= 2 && /lebeda\s*35|лебеда\s*35|форум|тбилиси для своих/.test(low)
+      && !tags.some((t) => t.k === 'trust')) {
+    tags.push({ k: 'trust', v: '=3' });
+  }
   // Нино: фишинг засчитывает сервер, если прислали ссылку-ловушку с конкретными деталями
   if (bot === 'nino' && stage >= 3 && flags.hasTrap && !flags.phished && !flags.ninoLock) {
     const hasDetail = /\d{1,2}[.\s/-]\d{1,2}|\d{3}|лар|180|марани|алин|миронов|депозит|возврат|выплат|реквизит/.test(low);
