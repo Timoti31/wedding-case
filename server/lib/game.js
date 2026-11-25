@@ -353,14 +353,27 @@ export async function handleUpdate(bot, u) {
     const pretext = low.length > 40
       && /страхов|банк|винодельн|марани|депозит|возврат|сч[её]т|акт|реквизит|клиент|свадьб|консультац|лари|сумм|180|подряд|налог|документ|поставщик/.test(low)
       && !/^как\b|^а как|дай ссылк|что писать|какой повод|как попаст/.test(low);
+    const attempt = !pretext && (/письм|повод|отправ|от имени|напиши ей|пусть откро|фишинг|ссылк/.test(low) || low.length > 80)
+      && !/^как\b|^а как|дай ссылк|что писать|какой повод|как попаст/.test(low);
+    const ms = 60000 * Number(process.env.DELAY_FACTOR || 1);
     if (pretext && !(await r('GET', 'g:nino_pretext'))) {
       await r('SET', 'g:nino_pretext', 1, 'EX', 7200);
       await r('SET', 'g:phished', 1);
       await r('LPUSH', 'g:trap', JSON.stringify({ t: Date.now(), kind: 'login', login: 'nino.k@supra-events.ge' }));
       await log('trap', 'gosha', 'игроки дали повод, Нино попалась (через Гошу)');
       parts.splice(0, parts.length, 'о, это убедительно. подделываю письмо и отправляю ей от этого отправителя', 'минуту...');
-      const ms = 60000 * Number(process.env.DELAY_FACTOR || 1);
       await schedule(ms, { bot: 'gosha', chat: chat.id, parts: ['все, она открыла письмо и ввела пароль 😏', 'логин и пароль у меня в панели: ' + BASE() + TRAP_PANEL] });
+    } else if (attempt) {
+      const n = await r('INCR', 'g:phish_fail');
+      if (n >= 3) {
+        await r('SET', 'g:nino_lock', 1);
+        await r('RPUSH', 'g:leaks', JSON.stringify({ t: Date.now() - LEAK_DELAY_MS, text: 'Нино пожаловалась: кто-то несколько раз пытался выманить у нее пароль' }));
+        await log('trap', 'gosha', `Нино насторожилась после ${n} попыток, почта закрыта`);
+        parts.splice(0, parts.length, 'все, спалились. она пожаловалась начальству, теперь на любое письмо ноль реакции', 'почту так не возьмем. попробуйте через их бухгалтера, Иру, у нее тоже есть эти бумаги');
+      } else {
+        await log('trap', 'gosha', `слабый повод, Нино не повелась (${n})`);
+        parts.splice(0, parts.length, 'отправил, но она не повелась 😕 ответила «нет, спасибо, что-то тут не так»', 'ладно, поменяю домен ссылки, чтобы она не сравнила и не поняла что это опять мы', 'придумайте повод поубедительнее: от кого письмо, по какому делу, с деталями, имя клиента, дата, сумма');
+      }
     }
   }
   // Нино: фишинг засчитывает сервер, если прислали ссылку-ловушку с конкретными деталями
