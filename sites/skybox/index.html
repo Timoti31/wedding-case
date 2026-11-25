@@ -19,6 +19,15 @@
   .login button{width:100%;padding:12px;background:#2b6fd6;color:#fff;border:0;border-radius:8px;font-size:16px;cursor:pointer}
   .login .err{color:#c0392b;font-size:14px;min-height:20px;margin-top:10px}
   .login .forgot{display:block;text-align:center;margin-top:14px;font-size:13px;color:#2b6fd6;cursor:pointer}
+  .recover{max-width:620px;margin:6vh auto;background:#0b0f0c;color:#3ddc84;border-radius:14px;padding:26px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .recover h1{font-size:18px;color:#9be7b8;margin-bottom:6px}
+  .recover p{color:#6e9a7e;font-size:13px;margin-bottom:14px}
+  .recover textarea{width:100%;background:#071109;color:#3ddc84;border:1px solid #1e5c38;border-radius:8px;padding:10px;font:inherit;resize:vertical}
+  .recover button{margin-top:10px;background:#1b7a3e;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;cursor:pointer}
+  .rlog{margin-top:14px;max-height:46vh;overflow:auto;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+  .rlog .ok{color:#ffd43b;font-weight:700}
+  .rlog .hit{color:#4ade80;font-weight:700}
+  .rlog .miss{color:#466b54}
   .app{display:none;max-width:1000px;margin:24px auto;padding:0 16px}
   .crumbs{font-size:14px;color:#5b6b7d;margin-bottom:14px}
   .crumbs a{color:#2b6fd6;cursor:pointer}
@@ -46,6 +55,14 @@
   <button id="go">Войти</button>
   <div class="err" id="err"></div>
   <span class="forgot" onclick="document.getElementById('err').textContent='Ссылка для восстановления отправлена на привязанную почту.'">Забыли пароль?</span>
+</div>
+
+<div class="recover" id="recover" style="display:none">
+  <h1>g0sha::skybox-crack</h1>
+  <p>Атака по словарю на хранилище d.sokolov. Введи слова из жизни владельца: клички, имена близких, даты, города. Через запятую.</p>
+  <textarea id="rw" rows="3" placeholder="например: байкал, алина, 1970, минск, наталья"></textarea>
+  <button id="rgo">Запустить подбор</button>
+  <pre class="rlog" id="rlog"></pre>
 </div>
 
 <div class="app" id="app">
@@ -96,6 +113,68 @@ function openX(i,j){
   document.getElementById("viewer").style.display="flex";
 }
 function closeV(){document.getElementById("viewer").style.display="none"}
+
+// --- Режим подбора (g0sha). Открывается по ?recover ---
+const TARGET_HASH="ea0ae6f994b0713fb20f276e8b8bd318d6643f15702da6690f81ce92442030a4";
+const LOGIN="d.sokolov";
+const TRANSLIT={а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"i",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya"};
+function tr(w){return w.split("").map(c=>TRANSLIT[c]!==undefined?TRANSLIT[c]:c).join("")}
+const NOISE=["123456","password","qwerty","admin","111111","dima2026","georgia","tbilisi","letmein","iloveyou","sokolov1","000000"];
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function candidates(words){
+  const base=new Set();
+  for(let w of words){w=w.trim().toLowerCase();if(!w)continue;base.add(w);if(/[а-яё]/.test(w))base.add(tr(w));}
+  const nums=[...base].filter(x=>/^\d+$/.test(x));
+  const texts=[...base].filter(x=>!/^\d+$/.test(x));
+  const out=new Set();
+  const suf=["","1","12","123","!","2026","2025"];
+  for(const t of texts){for(const s of suf)out.add(t+s);for(const n of nums){out.add(t+n);out.add(n+t);}for(const t2 of texts)if(t!==t2)out.add(t+t2);}
+  for(const n of nums)out.add(n);
+  return [...out];
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function crack(){
+  const log=document.getElementById("rlog");
+  const words=document.getElementById("rw").value.split(/[,\n]/);
+  const cands=candidates(words);
+  if(!cands.length){log.innerHTML='<div class="miss">нет слов для подбора</div>';return}
+  document.getElementById("rgo").disabled=true;
+  log.innerHTML="";
+  const line=(cls,txt)=>{const d=document.createElement("div");d.className=cls;d.textContent=txt;log.appendChild(d);log.scrollTop=log.scrollHeight;};
+  line("", "target: skybox://"+LOGIN+"  | загружено слов: "+words.filter(w=>w.trim()).length+"  | кандидатов: "+cands.length);
+  await sleep(400);
+  let found=null, shown=0;
+  for(const c of cands){
+    // иногда подмешиваем случайный популярный пароль, который заведомо не подходит
+    if(Math.random()<0.5){const n=NOISE[Math.floor(Math.random()*NOISE.length)];line("miss","пробую "+LOGIN+" : "+n+"  ...нет");shown++;await sleep(28);}
+    const h=await sha(LOGIN+"|"+c);
+    if(h===TARGET_HASH){line("hit","пробую "+LOGIN+" : "+c+"  ...СОВПАДЕНИЕ ✓");found=c;break;}
+    line("miss","пробую "+LOGIN+" : "+c+"  ...нет");shown++;
+    await sleep(shown<40?30:8);
+  }
+  await sleep(500);
+  if(found){
+    line("ok","");line("ok","[+] ПАРОЛЬ ПОДОБРАН: "+found);
+    line("ok","[+] расшифровываю хранилище...");
+    await sleep(900);
+    try{
+      DATA=JSON.parse(await decryptPayload(window.VAULT,LOGIN+"|"+found));
+      document.getElementById("recover").style.display="none";
+      document.getElementById("login").style.display="none";
+      document.getElementById("app").style.display="block";
+      document.getElementById("who").textContent=DATA.user;
+      root();
+    }catch(e){line("miss","ошибка расшифровки: "+e.message)}
+  }else{
+    line("ok","");line("ok","[-] не удалось. нужно больше данных о владельце: клички, имена близких, важные даты.");
+    document.getElementById("rgo").disabled=false;
+  }
+}
+if(/recover/i.test(location.search+location.hash)){
+  document.getElementById("login").style.display="none";
+  document.getElementById("recover").style.display="block";
+  document.getElementById("rgo").onclick=crack;
+}
 </script>
 </body>
 </html>
