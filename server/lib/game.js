@@ -6,6 +6,7 @@ import { chars, items, SITE, TRAP, TRAP_PANEL, CONTACTS } from './characters.js'
 
 export const BASE = () => process.env.PUBLIC_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`;
 const LEAK_DELAY_MS = Number(process.env.LEAK_DELAY_MIN || 20) * 60000;
+const DF = () => Number(process.env.DELAY_FACTOR || 1);
 
 // ---------- состояние ----------
 export async function getStage() {
@@ -138,22 +139,22 @@ async function onStage(s) {
   const main = await r('GET', 'g:chat:main');
   const guests = await r('GET', 'g:chat:guests');
   if (s === 2) {
-    if (guests) await schedule(60000, { bot: 'viktor', chat: guests, parts: ['Друзья, прошу не распространять слухи. Ситуация под контролем.'] });
+    if (guests) await schedule(60000 * DF(), { bot: 'viktor', chat: guests, parts: ['Друзья, прошу не распространять слухи. Ситуация под контролем.'] });
     for (const p of await players('viktor'))
-      await schedule(3 * 60000, { bot: 'viktor', chat: p, parts: ['Добрый вечер. Алина сказала, что вы помогаете с поисками. Благодарю.', 'Я нанял частного детектива, он работает. Если что-то найдете, пишите сначала мне. Так будет быстрее.'] });
+      await schedule(3 * 60000 * DF(), { bot: 'viktor', chat: p, parts: ['Добрый вечер. Алина сказала, что вы помогаете с поисками. Благодарю.', 'Я нанял частного детектива, он работает. Если что-то найдете, пишите сначала мне. Так будет быстрее.'] });
   }
   if (s === 4) {
-    if (main) await schedule(90000, { bot: 'alina', chat: main, parts: ['ребят', 'как только найдете его сразу скиньте адрес мне. только мне, никому больше', 'пожалуйста 🙏'] });
+    if (main) await schedule(90000 * DF(), { bot: 'alina', chat: main, parts: ['ребят', 'как только найдете его сразу скиньте адрес мне. только мне, никому больше', 'пожалуйста 🙏'] });
     for (const p of await players('viktor'))
-      await schedule(6 * 60000, { bot: 'viktor', chat: p, parts: ['Буду краток.', 'Кто первым сообщит мне, где Дмитрий, получит 5000 долларов. Без вопросов.'] });
+      await schedule(6 * 60000 * DF(), { bot: 'viktor', chat: p, parts: ['Буду краток.', 'Кто первым сообщит мне, где Дмитрий, получит 5000 долларов. Без вопросов.'] });
   }
   if (s === 3) {
     for (const p of await players('gosha'))
-      await schedule(2 * 60000, { bot: 'gosha', chat: p, parts: ['йо, Костя сказал вы там до агентства докопались', 'если нужно будет что-то вскрыть, пишите'] });
+      await schedule(2 * 60000 * DF(), { bot: 'gosha', chat: p, parts: ['йо, Костя сказал вы там до агентства докопались', 'если нужно будет что-то вскрыть, пишите'] });
   }
   if (s === 5) {
     for (const p of await players('kostya'))
-      await schedule(4 * 60000, { bot: 'kostya', chat: p, parts: ['ребят', 'мне только что с незнакомого номера пришло. пересылаю'], items: ['gergeti'] });
+      await schedule(4 * 60000 * DF(), { bot: 'kostya', chat: p, parts: ['ребят', 'мне только что с незнакомого номера пришло. пересылаю'], items: ['gergeti'] });
   }
 }
 
@@ -452,7 +453,7 @@ export async function handleUpdate(bot, u) {
     } else if (t.k === 'bear' && bot === 'zurab' && stage >= 5 && !flags.dimaOpen) {
       await r('SET', 'g:dima_open', 1);
       const dimaName = names.dima ? '@' + names.dima : '(бот Димы еще не создан)';
-      await schedule(150000, { bot: 'zurab', chat: chat.id, parts: ['пишите сюда. это наш тихий мальчик', dimaName, 'если вы ему плохо сделаете, я вас найду. а потом накормлю, чтобы стыдно было'] });
+      await schedule(150000 * DF(), { bot: 'zurab', chat: chat.id, parts: ['пишите сюда. это наш тихий мальчик', dimaName, 'если вы ему плохо сделаете, я вас найду. а потом накормлю, чтобы стыдно было'] });
       await log('flag', bot, 'кодовые слова: через 2,5 мин Зураб даст контакт Димы');
     } else if (t.k === 'alarm' && bot === 'zurab') {
       await r('SET', 'g:dima_moved', 1);
