@@ -227,6 +227,8 @@ function parse(out) {
     return '';
   });
   text = text.replace(/[—–]/g, '-');
+  // слабая модель иногда коверкает имя невесты: Алиса -> Алина (сохраняем регистр и склонение)
+  text = text.replace(/(А|а)лис(а|ы|е|у|ой|ою)/g, (_, A, e) => A + 'лин' + (e === 'ою' ? 'ой' : e));
   text = text.split('\n').filter((l) => !/^\s*[\[(*][^\]\)]*(пересыла|отправля|присыла|голосов|фото|скрин|ссылк)[^\]\)]*[\])*]\s*$/i.test(l)).join('\n').trim();
   const parts = text.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean).slice(0, 4);
   return { parts, tags };
