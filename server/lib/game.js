@@ -297,7 +297,15 @@ export async function handleUpdate(bot, u) {
     const all = (await r('LRANGE', 'g:leaks', 0, -1)) || [];
     ctx.leaks = all.map((x) => JSON.parse(x)).filter((x) => Date.now() - x.t >= LEAK_DELAY_MS).map((x) => x.text).slice(-15);
   }
-  const system = ch.prompt(stage, trust, ctx);
+  // Дима: открывается детерминированно, когда игроки показали, что знают правду (Алина сдала его отцу + схема)
+  let effTrust = trust;
+  if (bot === 'dima' && trust < 6) {
+    const le = text.toLowerCase();
+    const knowsBetrayal = /алин/.test(le) && /(отц|оте?ц|папе|папу|папа|виктор|позвонил|позвонила|сдал|сдала|рассказал|рассказала|предал|предала|донес|донесл|настучал|сообщил)/.test(le);
+    const knowsScheme = /(схем|отмыв|прачечн|поддел|180|supra|супра|нино|агентств|гел[аыу]|фиктивн|завыш|обнал|деньг|сч[её]т)/.test(le);
+    if (knowsBetrayal && knowsScheme) { effTrust = 6; await setTrust(bot, chat.id, 6); }
+  }
+  const system = ch.prompt(stage, effTrust, ctx);
   const history = histRaw.map((x) => JSON.parse(x));
 
   if (!ch.delayMin) await tg(bot, 'sendChatAction', { chat_id: chat.id, action: 'typing' }).catch(() => {});
@@ -388,8 +396,10 @@ export async function handleUpdate(bot, u) {
       tags.push({ k: 'phish_fail', v: '' });
     }
   }
-  // Контакты: если просили, сервер сам добавляет ники из списка персонажа
-  if (CONTACTS[bot] && /(контакт|юзер|ник|@|телеграм|связаться)/.test(low)) {
+  // Контакты: только если реально ПРОСЯТ (глагол просьбы рядом с "контакт/ник"), а не просто упомянули слово
+  const asksContact = /(да[йи]|скин|пришл|сброс|перекин|подскаж|нужен|нужны|есть ли|у теб|у кого|кто (может|знает)|с кем|как (с ним|с ней|мне|тут)?\s*связ|поделись|можно контакт|дай ник).{0,25}(контакт|ник|юзер|телеграм|@|связ)/.test(low)
+    || /(контакт|ник|юзер|телеграм).{0,15}(кого|у кого|есть\?|дай|скинь|пришли)/.test(low);
+  if (CONTACTS[bot] && asksContact) {
     const have = Object.entries(CONTACTS[bot]).filter(([k]) => names[k]);
     const shown = parts.join(' ');
     const missing = have.filter(([k]) => !shown.includes('@' + names[k]));
