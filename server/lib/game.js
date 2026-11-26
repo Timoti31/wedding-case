@@ -378,7 +378,7 @@ export async function handleUpdate(bot, u) {
         await r('SET', 'g:nino_lock', 1);
         await r('RPUSH', 'g:leaks', JSON.stringify({ t: Date.now() - LEAK_DELAY_MS, text: 'Нино пожаловалась: кто-то несколько раз пытался выманить у нее пароль' }));
         await log('trap', 'gosha', `Нино насторожилась после ${n} попыток, почта закрыта`);
-        parts.splice(0, parts.length, 'все, спалились. она пожаловалась начальству, теперь на любое письмо ноль реакции', 'почту так не возьмем. попробуйте через их бухгалтера, Иру, у нее тоже есть эти бумаги');
+        parts.splice(0, parts.length, 'все, спалились. она пожаловалась начальству, теперь на любое письмо ноль реакции', 'почту так не возьмем. но есть обходной путь: их бухгалтер Ира, у нее те же бумаги', 'она со страху сидела на местном форуме под ником lebeda35. вот форум, найдите ее там: https://tbilisi-svoi.vercel.app');
       } else {
         await log('trap', 'gosha', `слабый повод, Нино не повелась (${n})`);
         parts.splice(0, parts.length, 'отправил, но она не повелась 😕 ответила «нет, спасибо, что-то тут не так»', 'ладно, поменяю домен ссылки, чтобы она не сравнила и не поняла что это опять мы', 'придумайте повод поубедительнее: от кого письмо, по какому делу, с деталями, имя клиента, дата, сумма');
@@ -407,8 +407,10 @@ export async function handleUpdate(bot, u) {
   }
   const CONTACT_STEM = { kostya: /кост/, lera: /лер/, tamara: /тамар/, nino: /нино/, viktor: /виктор/, gosha: /гош/, natalya: /наташ|натал/ };
   if (CONTACTS[bot] && asksContact) {
-    // отдаем ТОЛЬКО тех, кого игрок реально назвал (иначе бот вываливал левый контакт, напр. Костю на вопрос про Эку)
-    const have = Object.entries(CONTACTS[bot]).filter(([k]) => names[k] && CONTACT_STEM[k] && CONTACT_STEM[k].test(low));
+    // назвали человека -> даем его; спросили общий список -> даем всех; назвали чужого (Эка) -> никого
+    const matched = Object.entries(CONTACTS[bot]).filter(([k]) => names[k] && CONTACT_STEM[k] && CONTACT_STEM[k].test(low));
+    const genericAsk = /с кем|кто ещ|кто еще|остальн|други[хе]|всех|все контакт|кому (ещ|еще|мне|написать|нам)|еще кто|ещё кто|кто знает|с кем.*поговор/.test(low);
+    const have = matched.length ? matched : (genericAsk ? Object.entries(CONTACTS[bot]).filter(([k]) => names[k]) : []);
     const shown = parts.join(' ');
     const missing = have.filter(([k]) => !shown.includes('@' + names[k]));
     if (missing.length && missing.length === have.length) {
