@@ -399,8 +399,10 @@ export async function handleUpdate(bot, u) {
   // Контакты: только если реально ПРОСЯТ (глагол просьбы рядом с "контакт/ник"), а не просто упомянули слово
   const asksContact = /(да[йи]|скин|пришл|сброс|перекин|подскаж|нужен|нужны|есть ли|у теб|у кого|кто (может|знает)|с кем|как (с ним|с ней|мне|тут)?\s*связ|поделись|можно контакт|дай ник).{0,25}(контакт|ник|юзер|телеграм|@|связ)/.test(low)
     || /(контакт|ник|юзер|телеграм).{0,15}(кого|у кого|есть\?|дай|скинь|пришли)/.test(low);
+  const CONTACT_STEM = { kostya: /кост/, lera: /лер/, tamara: /тамар/, nino: /нино/, viktor: /виктор/, gosha: /гош/, natalya: /наташ|натал/ };
   if (CONTACTS[bot] && asksContact) {
-    const have = Object.entries(CONTACTS[bot]).filter(([k]) => names[k]);
+    // отдаем ТОЛЬКО тех, кого игрок реально назвал (иначе бот вываливал левый контакт, напр. Костю на вопрос про Эку)
+    const have = Object.entries(CONTACTS[bot]).filter(([k]) => names[k] && CONTACT_STEM[k] && CONTACT_STEM[k].test(low));
     const shown = parts.join(' ');
     const missing = have.filter(([k]) => !shown.includes('@' + names[k]));
     if (missing.length && missing.length === have.length) {

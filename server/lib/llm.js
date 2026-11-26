@@ -43,7 +43,7 @@ async function gemini(system, messages, tier) {
 async function groq(system, messages, tier, cfg = {}) {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error('нет GROQ_API_KEY');
-  const models = (cfg.groq_model || process.env.GROQ_MODEL || 'moonshotai/kimi-k2-instruct-0905,openai/gpt-oss-120b,openai/gpt-oss-20b').split(',').map((m) => m.trim());
+  const models = (cfg.groq_model || process.env.GROQ_MODEL || 'moonshotai/kimi-k2-instruct,openai/gpt-oss-120b,openai/gpt-oss-20b').split(',').map((m) => m.trim());
   const fails = [];
   for (const model of models) {
     const body = {
