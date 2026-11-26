@@ -506,3 +506,4 @@ export async function resetGame() {
 }
 
 export { sendParts, getJ, setJ };
+// deploy bump 1795679141 (подхватить TG_DIMA)
