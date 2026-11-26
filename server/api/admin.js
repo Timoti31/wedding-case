@@ -2,7 +2,9 @@
 import { chars } from '../lib/characters.js';
 import { r } from '../lib/redis.js';
 import { tg } from '../lib/tg.js';
-import { getStage, getTrust, setTrust, setStage, startGame, resetGame, tick, toObj, log, schedule } from '../lib/game.js';
+import { getStage, getTrust, setTrust, setStage, startGame, resetGame, tick, toObj, log, schedule, BASE } from '../lib/game.js';
+
+const GAZETA = '/f/c3f9a71e22b4.html';
 
 async function state() {
   const [stage, given, flags, leaks, logRaw, chatsRaw, main, guests, outN, botsRaw] = await Promise.all([
@@ -75,6 +77,9 @@ export default async function handler(req, res) {
         const text = ENDINGS[b.which];
         if (main && text) {
           await tg('alina', 'sendMessage', { chat_id: main, text });
+          if (b.which === 'good' || b.which === 'best') {
+            await tg('alina', 'sendMessage', { chat_id: main, text: `🗞 Расследование Эки вышло:\n${BASE()}${GAZETA}` });
+          }
           await log('stage', 'panel', `финал: ${b.which}`);
         }
       }
