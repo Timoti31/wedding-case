@@ -305,9 +305,9 @@ export async function handleUpdate(bot, u) {
   let effTrust = trust;
   if (bot === 'dima' && trust < 6) {
     const le = text.toLowerCase();
-    const knowsBetrayal = /алин/.test(le) && /(отц|оте?ц|папе|папу|папа|виктор|позвонил|позвонила|сдал|сдала|рассказал|рассказала|предал|предала|донес|донесл|настучал|сообщил)/.test(le);
-    const knowsScheme = /(схем|отмыв|прачечн|поддел|180|supra|супра|нино|агентств|гел[аыу]|фиктивн|завыш|обнал|деньг|сч[её]т)/.test(le);
-    if (knowsBetrayal && knowsScheme) { effTrust = 6; await setTrust(bot, chat.id, 6); }
+    // открываем, как только показали, что знают про предательство Алины (ключевой секрет Димы)
+    const knowsBetrayal = /алин/.test(le) && /(отц|оте?ц|папе|папу|папа|виктор|позвонил|позвонила|сдал|сдала|рассказал|рассказала|предал|предала|подстав|заложил|слил|слила|выдал|выдала|донес|донесл|настучал|сообщил)/.test(le);
+    if (knowsBetrayal) { effTrust = 6; await setTrust(bot, chat.id, 6); }
   }
   const system = ch.prompt(stage, effTrust, ctx);
   const history = histRaw.map((x) => JSON.parse(x));
