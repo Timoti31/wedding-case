@@ -74,9 +74,14 @@ function postHTML(p,x,showHead){
 }
 function feed(){
   const items=[];
-  Object.values(ALL).forEach(p=>p.posts.forEach(x=>{if(!p.main||x.l>150)items.push([p,x])}));
+  Object.values(ALL).forEach(p=>{
+    const ps=(p.posts||[]).filter(x=>x.img||x.txt);
+    if(!ps.length)return;
+    ps.sort((a,b)=>toDate(b.d)-toDate(a.d));
+    items.push([p,ps[0]]);
+  });
   items.sort((a,b)=>toDate(b[1].d)-toDate(a[1].d));
-  main.innerHTML=`<div class="sec">Популярное</div>`+items.slice(0,30).map(([p,x])=>postHTML(p,x,true)).join("");
+  main.innerHTML=`<div class="sec">Популярное</div>`+items.map(([p,x])=>postHTML(p,x,true)).join("");
 }
 function search(q){
   const r=Object.values(ALL).filter(p=>(p.name+" "+p.nick+" "+(p.bio||"")).toLowerCase().includes(q));
