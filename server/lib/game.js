@@ -154,7 +154,7 @@ async function onStage(s) {
   }
   if (s === 5) {
     for (const p of await players('kostya'))
-      await schedule(4 * 60000 * DF(), { bot: 'kostya', chat: p, parts: ['ребят', 'мне только что с незнакомого номера пришло. пересылаю'], items: ['gergeti'] });
+      await schedule(4 * 60000 * DF(), { bot: 'kostya', chat: p, parts: ['ребят', 'мне только что с незнакомого номера пришло. пересылаю', 'где это снято - без понятия. покажите Гоше, он по фото место вычисляет'], items: ['gergeti'] });
   }
 }
 
