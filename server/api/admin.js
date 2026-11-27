@@ -71,7 +71,6 @@ export default async function handler(req, res) {
       if (op === 'guests') await r('SET', 'g:chat:guests', b.chat);
       if (op === 'reset') await resetGame();
       if (op === 'cfg') { for (const k of ['llm_order', 'groq_model']) { if (b[k]) await r('HSET', 'g:cfg', k, String(b[k]).trim()); else await r('HDEL', 'g:cfg', k); } }
-      if (op === 'phish') { await r('SET', 'g:phished', 1); await log('trap', 'panel', 'Нино попалась: данные в панели Гоши'); }
       if (op === 'ending') {
         const main = await r('GET', 'g:chat:main');
         const text = ENDINGS[b.which];
@@ -86,7 +85,7 @@ export default async function handler(req, res) {
       if (op === 'say') {
         await tg(b.bot, 'sendMessage', { chat_id: b.chat, text: b.text });
         await r('RPUSH', `g:h:${b.bot}:${b.chat}`, JSON.stringify({ role: 'assistant', content: b.text }));
-        await log('say', b.bot, `ведущий -> ${b.chat}: ${b.text}`);
+        await log('say', b.bot, b.text, { chat: String(b.chat), who: 'Ведущий' });
       }
       return res.json({ ok: true });
     }
@@ -113,7 +112,17 @@ button.sec{background:#e9ecef;color:#222} button.red{background:#c92a2a}
 table{width:100%;border-collapse:collapse} td{padding:4px;border-bottom:1px solid #eee}
 #log{max-height:60vh;overflow:auto;font-size:12.5px}
 .l{padding:3px 0;border-bottom:1px solid #f0f0f0}
-.k-in{color:#555}.k-out{color:#1c7ed6}.k-stage{color:#2b8a3e;font-weight:600}.k-error{color:#c92a2a}.k-give{color:#e8590c;font-weight:600}.k-leak{color:#ae3ec9}.k-trust{color:#868e96}
+.k-in{color:#555}.k-out{color:#1c7ed6}.k-stage{color:#2b8a3e;font-weight:600}.k-error{color:#c92a2a}.k-give{color:#e8590c;font-weight:600}.k-leak{color:#ae3ec9}.k-trust{color:#868e96}.k-flag{color:#1098ad}.k-trap{color:#e8590c}.k-say{color:#9c6b00}.k-blocked,.k-warn{color:#c92a2a}
+#threads{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.th{flex:0 0 262px;max-width:300px;border:1px solid #e3e3e8;border-radius:8px;display:flex;flex-direction:column;max-height:56vh}
+.thh{background:#f1f3f5;padding:5px 8px;font-weight:600;font-size:12.5px;border-bottom:1px solid #e3e3e8;border-radius:8px 8px 0 0}
+.thh small{font-weight:400}
+.thb{overflow:auto;padding:6px;display:flex;flex-direction:column;gap:4px}
+.m{font-size:12.5px;padding:4px 7px;border-radius:7px;max-width:93%;white-space:pre-wrap;word-break:break-word;line-height:1.35}
+.m small{opacity:.6;font-size:11px}
+.mi{background:#e7f5ff;align-self:flex-start}
+.mo{background:#eef0f2;align-self:flex-end}
+.ms{background:#fff3bf;align-self:center;font-style:italic}
 select,input,textarea{font:inherit;padding:5px;border:1px solid #ccc;border-radius:6px;width:100%;box-sizing:border-box;margin:3px 0}
 small{color:#888}
 </style></head><body>
@@ -132,14 +141,14 @@ small{color:#888}
 <div class="card"><h3>Написать от персонажа</h3>
 <select id="sb" onchange="fillChats()"></select><select id="sc"></select><textarea id="stx" rows="3" placeholder="текст"></textarea>
 <button onclick="say()">Отправить</button></div>
-<div class="card"><h3>Ловушка Гоши</h3><p><small>Нино решает сама. Если бот ошибся, а письмо игроков было убедительным, нажми кнопку, и данные появятся в панели Гоши.</small></p><button onclick="post('phish',{})">Нино попалась</button></div>
 <div class="card"><h3>Финал</h3><div id="final"></div>
 <p><small>Кнопка отправляет текст концовки в общий чат. Подсвечена та, что команда открыла по ходу игры.</small></p>
 <button id="fb" onclick="post('ending',{which:'bad'})">Плохая</button>
 <button id="fg" onclick="post('ending',{which:'good'})">Хорошая</button>
 <button id="fx" onclick="post('ending',{which:'best'})">Лучшая</button></div>
 <div class="card"><h3>Выдано и утечки</h3><div id="given"></div></div>
-<div class="card" style="grid-column:1/-1"><h3>Журнал</h3><div id="log"></div></div>
+<div class="card" style="grid-column:1/-1"><h3>Диалоги <small>каждый игрок × персонаж — отдельная колонка, новое снизу</small></h3><div id="threads"></div></div>
+<div class="card" style="grid-column:1/-1"><h3>События <small>этапы, улики, доверие, утечки, ошибки</small></h3><div id="events"></div></div>
 </main>
 <script>
 const K=new URLSearchParams(location.search).get('key');
@@ -165,7 +174,16 @@ async function load(){
  let unlocked='bad';if(F.confessed&&toAlina&&F.proofs>=3)unlocked='best';else if(F.proofs>=3&&toEka)unlocked='good';
  document.getElementById('final').innerHTML='Улик собрано: <b>'+F.proofs+'</b> (нужно 3+)<br>Признание Алины: <b>'+(F.confessed?'да':'нет')+'</b><br>Дима найден: <b>'+(F.dimaOpen?'да':'нет')+'</b><br>Дима согласен к журналисту: <b>'+(toEka?'да':'нет')+'</b> · говорить с Алиной: <b>'+(toAlina?'да':'нет')+'</b><br>Команда открыла: <b style="color:#2b8a3e">'+({bad:'Плохую',good:'Хорошую',best:'Лучшую'}[unlocked])+'</b>';
  for(const[id,w]of[['fb','bad'],['fg','good'],['fx','best']])document.getElementById(id).className=(w===unlocked?'':'sec');
- document.getElementById('log').innerHTML=S.log.map(l=>'<div class="l k-'+l.kind+'"><small>'+new Date(l.t).toLocaleTimeString()+'</small> <b>'+esc(NAMES[l.bot]||l.bot)+'</b> '+esc(l.text)+'</div>').join('');
+ const threads={},events=[],MSG={in:1,out:1,say:1};
+ for(const l of S.log){if(MSG[l.kind]&&l.chat){const key=l.bot+'|'+l.chat;const t=threads[key]||(threads[key]={bot:l.bot,chat:l.chat,who:'',last:l.t,items:[]});t.items.push(l);if(l.t>t.last)t.last=l.t;if(l.who&&l.kind==='in')t.who=l.who;}else events.push(l);}
+ const order=Object.values(threads).sort((a,b)=>b.last-a.last);
+ document.getElementById('threads').innerHTML=order.map(t=>{
+  const hm=l=>new Date(l.t).toLocaleTimeString().slice(0,5);
+  const body=t.items.slice().reverse().map(l=>{const tm='<small>'+hm(l)+'</small> ';if(l.kind==='in')return '<div class="m mi">'+tm+esc(l.text)+'</div>';if(l.kind==='say')return '<div class="m ms">'+tm+'ведущий: '+esc(l.text)+'</div>';return '<div class="m mo">'+tm+esc(l.text)+'</div>';}).join('');
+  return '<div class="th"><div class="thh">'+esc(NAMES[t.bot]||t.bot)+' ← '+esc(t.who||cname(t.chat))+' <small>'+esc(cname(t.chat))+'</small></div><div class="thb">'+body+'</div></div>';
+ }).join('')||'<small>пока нет диалогов</small>';
+ for(const el of document.querySelectorAll('.thb'))el.scrollTop=el.scrollHeight;
+ document.getElementById('events').innerHTML=events.map(l=>'<div class="l k-'+l.kind+'"><small>'+new Date(l.t).toLocaleTimeString()+'</small> <b>'+esc(NAMES[l.bot]||l.bot)+'</b> '+esc(l.text)+'</div>').join('')||'<small>нет событий</small>';
 }
 function fillChats(){const sb=document.getElementById('sb'),sc=document.getElementById('sc');const cur=sc.value;const ids=(S.botChats[sb.value]||[]).map(String);const list=S.chats.filter(c=>ids.includes(String(c.id)));sc.innerHTML=list.map(c=>'<option value="'+c.id+'">'+esc(c.title)+'</option>').join('')||'<option value="">нет чатов: игрок должен написать этому боту</option>';if(cur&&list.some(c=>String(c.id)===cur))sc.value=cur;}
 async function say(){const t=document.getElementById('stx');if(!t.value.trim()||!sc.value)return;await post('say',{bot:sb.value,chat:sc.value,text:t.value});t.value='';}

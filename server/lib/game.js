@@ -25,8 +25,8 @@ export async function setTrust(bot, chat, val) {
   return v;
 }
 
-export async function log(kind, bot, text) {
-  await r('LPUSH', 'g:log', JSON.stringify({ t: Date.now(), kind, bot, text: String(text).slice(0, 600) }));
+export async function log(kind, bot, text, meta) {
+  await r('LPUSH', 'g:log', JSON.stringify({ t: Date.now(), kind, bot, text: String(text).slice(0, 600), ...(meta || {}) }));
   await r('LTRIM', 'g:log', 0, 299);
 }
 
@@ -112,7 +112,7 @@ export async function setStage(n, who = 'panel') {
 const HINTS = {
   1: ['ребят а может кто знает где дима был вечером 12го? напишите его другу косте, они близкие', 'и лере напишите, вдруг она что-то слышала'],
   2: ['костя говорил дима всю неделю сидел над какими-то файлами по работе', 'гоша в этом шарит, может глянуть его облако. спросите костю его контакт'],
-  3: ['если это правда связано с агентством, надо попасть в переписку нино', 'гоша знает как. и посмотрите кто вообще стоит за supra events'],
+  3: ['если это правда связано с агентством, надо попасть в переписку нино', 'гоша знает как. и пробейте supra events в реестре компаний - на кого оформлено и не совпадает ли адрес с чьим-то еще бизнесом'],
   4: ['я не понимаю кто мог сказать про диму... кто вообще знал?', 'может тетя тамара что-то видела, она у меня ночевала тогда'],
   5: ['костя писал что ему что-то пришло с незнакомого номера, спросите у него', 'он где-то прячется, надо понять где по фото'],
 };
@@ -288,7 +288,7 @@ export async function handleUpdate(bot, u) {
   const hKey = `g:h:${bot}:${chat.id}`;
   await r('RPUSH', hKey, JSON.stringify({ role: 'user', content: `${who}: ${text}` }));
   await r('LTRIM', hKey, -40, -1);
-  await log('in', bot, `[${isPrivate ? 'личка' : chat.title}] ${who}: ${text}`);
+  await log('in', bot, `${who}: ${text}`, { chat: String(chat.id), who, place: isPrivate ? 'личка' : chat.title });
 
   const [stage, trust, histRaw, given] = await Promise.all([
     getStage(), getTrust(bot, chat.id), r('LRANGE', hKey, 0, -1), r('SMEMBERS', 'g:given'),
@@ -332,7 +332,7 @@ export async function handleUpdate(bot, u) {
   const { parts, tags } = parse(sanitize(out.text, names, bot));
   // признание Алины ставит ТОЛЬКО сервер по условию (оба доказательства), модели это право не даем
   for (let i = tags.length - 1; i >= 0; i--) if (tags[i].k === 'confess') tags.splice(i, 1);
-  await log('out', bot, `(${out.provider}) ${parts.join(' / ')}${tags.length ? '  ' + tags.map((t) => `[${t.k}:${t.v}]`).join(' ') : ''}`);
+  await log('out', bot, `${parts.join(' / ')}${tags.length ? '  ' + tags.map((t) => `[${t.k}:${t.v}]`).join(' ') : ''}`, { chat: String(chat.id), who, prov: out.provider });
 
   const toSend = [];
   let newStage = null;
@@ -426,6 +426,10 @@ export async function handleUpdate(bot, u) {
     parts.splice(0, parts.length,
       'напрямую эка с незнакомцами не говорит.',
       'соберите доказательства и пришлите мне, я сама передам их эке. она такое любит.');
+  }
+  // Лера: ссылку на сторис/алиби сервер добавляет сам (модельные ссылки вырезаются)
+  if (bot === 'lera' && trust >= 2 && /сторис|stories|алиби|батуми|пульс|pulse|где ты была|докажи|фото из/.test(low) && !parts.some((p) => /pulse-social/.test(p))) {
+    parts.push('вот мои сторис из батуми, смотри сама: https://pulse-social-three.vercel.app/#lera.gusseva');
   }
   const CONTACT_STEM = { kostya: /кост/, lera: /лер/, tamara: /тамар/, nino: /нино/, viktor: /виктор/, gosha: /гош/, natalya: /наташ|натал/ };
   if (CONTACTS[bot] && asksContact) {
