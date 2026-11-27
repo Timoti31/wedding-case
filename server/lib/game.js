@@ -330,6 +330,8 @@ export async function handleUpdate(bot, u) {
   }
   if (out.errors?.length) await log('warn', bot, 'запасная модель, причина: ' + out.errors.join(' | ').slice(0, 300));
   const { parts, tags } = parse(sanitize(out.text, names, bot));
+  // признание Алины ставит ТОЛЬКО сервер по условию (оба доказательства), модели это право не даем
+  for (let i = tags.length - 1; i >= 0; i--) if (tags[i].k === 'confess') tags.splice(i, 1);
   await log('out', bot, `(${out.provider}) ${parts.join(' / ')}${tags.length ? '  ' + tags.map((t) => `[${t.k}:${t.v}]`).join(' ') : ''}`);
 
   const toSend = [];
