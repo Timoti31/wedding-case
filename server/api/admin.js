@@ -174,8 +174,15 @@ label small,.mut{color:var(--mut)}
 .k-stage{color:var(--grn);font-weight:600}.k-give{color:var(--amb)}.k-leak{color:var(--pur)}
 .k-trust{color:var(--mut)}.k-flag{color:var(--cy)}.k-trap{color:var(--amb)}
 .k-error,.k-warn,.k-blocked{color:var(--red)}
-.matrix td{padding:5px 6px;border-bottom:1px solid var(--line);font-size:12.5px}
-.matrix th{color:var(--mut);font-weight:400;font-size:11px;padding:5px 6px;text-align:left}
+.tedit{display:flex;flex-direction:column;gap:9px}
+.tp{background:var(--pan2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.tpn{font-weight:700;margin-bottom:7px}
+.trow{display:flex;flex-wrap:wrap;gap:7px}
+.tcell{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:2px 7px 2px 12px;font-size:12.5px}
+.tcell input{width:46px;margin:0;text-align:center;padding:4px;border-radius:7px;background:var(--bg)}
+.tcell.tl0{border-color:#52232a}.tcell.tl0 input{color:var(--red)}
+.tcell.tl1{border-color:#52432a}.tcell.tl1 input{color:var(--amb)}
+.tcell.tl2{border-color:#1f4a33}.tcell.tl2 input{color:var(--grn)}
 hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 </style></head><body>
 <div class="top">
@@ -286,12 +293,12 @@ function renderEvents(){
 
 function renderPult(){
  const botOpts=Object.keys(S.trust).map(b=>'<option value="'+b+'">'+esc(nm(b))+'</option>').join('');
- const P=persons();
- // матрица доверия
+ const P=persons().filter(p=>Object.keys(p.bots).length||p.last);
+ const te=P.map(p=>{
+  const cells=Object.entries(p.bots).map(([b,o])=>'<span class="tcell '+tlev(o.v)+'">'+esc(nm(b))+'<input type="number" min="0" max="10" value="'+o.v+'" data-trust data-bot="'+b+'" data-chat="'+p.id+'">'+(o.blocked?'<button class="sec mini" data-act="unblock" data-bot="'+b+'" data-chat="'+p.id+'">разблок</button>':'')+'</span>').join('');
+  return '<div class="tp"><div class="tpn">'+esc(p.name)+' <span class="mut" style="font-size:11px;font-weight:400">'+(p.last?ago(p.last):'нет активности')+'</span></div><div class="trow">'+(cells||'<span class="mut" style="font-size:12px">ещё не писал в личку</span>')+'</div></div>';
+ }).join('')||'<span class="mut">игроки появятся, когда напишут ботам</span>';
  const bots=Object.keys(S.trust).filter(b=>S.bots[b]);
- let matrix='<table class="matrix"><tr><th>игрок</th>'+bots.map(b=>'<th>'+esc(nm(b))+'</th>').join('')+'</tr>';
- matrix+=P.map(p=>'<tr><td><b>'+esc(p.name)+'</b></td>'+bots.map(b=>{const o=p.bots[b];if(!o)return '<td class="mut">-</td>';return '<td><input type="number" min="0" max="10" value="'+o.v+'" data-trust data-bot="'+b+'" data-chat="'+p.id+'">'+(o.blocked?' <button class="sec mini" data-act="unblock" data-bot="'+b+'" data-chat="'+p.id+'">разблок</button>':'')+'</td>'}).join('')+'</tr>').join('');
- matrix+='</table>';
  const anyBlock=bots.filter(b=>S.blocked[b]).map(b=>'<button class="sec mini" data-act="unblock" data-bot="'+b+'">снять блок «'+esc(nm(b))+'» для всех</button>').join(' ');
 
  // чаты
@@ -312,7 +319,7 @@ function renderPult(){
    '<div class="card"><h3>Модели <small>без пересборки</small></h3><label><small>Порядок (gemini, groq, mistral, claude)</small><input id="c1" placeholder="groq"></label><label><small>Модели Groq через запятую</small><input id="c2" placeholder="openai/gpt-oss-120b,openai/gpt-oss-20b"></label><button data-act="cfg">Сохранить</button> <small id="cenv" class="mut"></small></div>'+
    '<div class="card"><h3>Опасная зона</h3><p class="mut" style="font-size:12px">Перед реальной игрой нажми сброс: обнулит этап, доверие, историю, утечки.</p><button class="red" data-act="reset">Сбросить игру</button></div>'+
   '</div>'+
-  '<div class="card wide"><h3>Матрица доверия <small>игроки × персонажи, 0-10</small></h3>'+matrix+(anyBlock?'<hr>'+anyBlock:'')+'</div>';
+  '<div class="card wide"><h3>Доверие <small>по игрокам, только активные линии</small></h3><div class="tedit">'+te+'</div>'+(anyBlock?'<hr>'+anyBlock:'')+'</div>';
  fillChats();
  if(!cfgInit&&S.cfg){el('c1').value=S.cfg.llm_order||'';el('c2').value=S.cfg.groq_model||'';cfgInit=true}
  else{if(el('c1'))el('c1').value=S.cfg.llm_order||'';if(el('c2'))el('c2').value=S.cfg.groq_model||''}
